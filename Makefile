@@ -6,7 +6,7 @@
 #    By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/08/26 14:06:44 by lubenard          #+#    #+#              #
-#    Updated: 2021/08/26 15:57:12 by lubenard         ###   ########.fr        #
+#    Updated: 2021/08/27 17:25:08 by lubenard         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,7 +26,7 @@ OBJ_C = $(SRCS_C:.c=.o)
 
 CFLAGS = -Wall -Wextra -Werror -g3
 
-all:  $(NAME)
+all: $(NAME)
 
 $(NAME): $(OBJ_C)
 	@printf "\033[33mLinking of $(NAME)...\033[0m"
