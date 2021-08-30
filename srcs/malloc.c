@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/08/30 21:03:02 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/08/30 21:34:38 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -85,9 +85,13 @@ void	*malloc(size_t size) {
 }
 
 void	free(void *ptr) {
+	t_alloc *node_ptr;
+
 	if (ptr == 0)
 		return;
-	((t_alloc *)ptr - sizeof(t_alloc))->is_free = 1;
+	node_ptr = (t_alloc *)((char*) ptr - sizeof(t_alloc) - 1);
+	printf("Freeing from address %p\n", node_ptr);
+	//munmap(node_ptr, sizeof(t_alloc) + node_ptr->size_remaining);
 }
 
 void	*realloc(void *ptr, size_t size) {
