@@ -6,7 +6,7 @@
 #    By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/08/26 14:06:44 by lubenard          #+#    #+#              #
-#    Updated: 2021/08/27 17:25:08 by lubenard         ###   ########.fr        #
+#    Updated: 2021/08/30 20:47:16 by lubenard         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -57,6 +57,10 @@ relaunch: fclean launch
 test: re
 	@clang main.c libft_malloc.so
 	@./a.out
+
+vtest: re
+	@clang main.c libft_malloc.so
+	@valgrind ./a.out
 
 .SILENT:
 
