@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/08/30 21:34:38 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/08/31 15:10:19 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,8 @@ void split_node(t_alloc *node, size_t size_of_block) {
 }
 
 void	*malloc(size_t size) {
+	t_alloc *return_node_ptr = 0;
+
 	if (size == 0)
 		return NULL;
 	printf("-------REQUESTING NEW MALLOC---------\n");
@@ -78,10 +80,12 @@ void	*malloc(size_t size) {
 		printf("Found space for %lu bytes in block located at %p\n", size, g_curr_node);
 		g_curr_node->size_remaining -= size;
 		printf("Remaining size of g_curr_node is %zu\n", g_curr_node->size_remaining);
+		return_node_ptr = g_curr_node;
 		//We need to split the block from other blocks
 		split_node(g_curr_node, size);
 	}
-	return g_curr_node + sizeof(t_alloc);
+	printf("Returning %p from malloc call. Original ptr is %p\n", return_node_ptr + sizeof(t_alloc), return_node_ptr);
+	return ((char*) return_node_ptr + sizeof(t_alloc));
 }
 
 void	free(void *ptr) {
@@ -89,9 +93,10 @@ void	free(void *ptr) {
 
 	if (ptr == 0)
 		return;
-	node_ptr = (t_alloc *)((char*) ptr - sizeof(t_alloc) - 1);
+	printf("Getting %p from arg\n", ptr);
+	node_ptr = (t_alloc *)((char*) ptr - sizeof(t_alloc));
 	printf("Freeing from address %p\n", node_ptr);
-	//munmap(node_ptr, sizeof(t_alloc) + node_ptr->size_remaining);
+	munmap(node_ptr, sizeof(t_alloc) + node_ptr->size_remaining);
 }
 
 void	*realloc(void *ptr, size_t size) {
