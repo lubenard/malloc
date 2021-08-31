@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/08/31 15:10:19 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/08/31 18:40:04 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ t_alloc *init_node(size_t size_requested) {
 	node->size_remaining = size_requested - sizeof(t_alloc);
 	node->is_free = 1;
 	node->next = NULL;
+	node->prev = NULL;
 	printf("Just created a node sir, size is %zu\n", node->size_remaining);
 	return node;
 }
@@ -57,6 +58,7 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	node->is_free = 0;
 	new_node->next = NULL;
 	node->next = new_node;
+	new_node->prev = node;
 	printf("Size of prev node is %lu\n", node->size_remaining);
 	// Add "Footer" to check if it is not overwriting.
 	place_footer();
@@ -88,6 +90,27 @@ void	*malloc(size_t size) {
 	return ((char*) return_node_ptr + sizeof(t_alloc));
 }
 
+void merge_blocks(t_alloc *node_ptr) {
+	t_alloc *node_tmp;
+	t_alloc *node_tmp_2;
+
+	node_tmp = node_ptr;
+	printf("Merge block, actually on %p\n", node_tmp);
+	while (node_ptr->prev) {
+		printf("Reversing linked list : Actually on %p, going on %p\n", node_ptr, node_tmp->prev);
+		node_tmp = node_tmp->prev;
+	}
+	while (node_tmp->next) {
+		if (node_tmp->is_free)
+			break;
+	}
+	node_tmp_2 = node_tmp;
+	while (node_tmp->is_free) {
+		node_tmp_2->size_remaining += node_tmp->size_remaining;
+		node_tmp = node_tmp->next;
+	}
+}
+
 void	free(void *ptr) {
 	t_alloc *node_ptr;
 
@@ -96,7 +119,8 @@ void	free(void *ptr) {
 	printf("Getting %p from arg\n", ptr);
 	node_ptr = (t_alloc *)((char*) ptr - sizeof(t_alloc));
 	printf("Freeing from address %p\n", node_ptr);
-	munmap(node_ptr, sizeof(t_alloc) + node_ptr->size_remaining);
+	merge_blocks(node_ptr);
+	//munmap(node_ptr, sizeof(t_alloc) + node_ptr->size_remaining);
 }
 
 void	*realloc(void *ptr, size_t size) {
