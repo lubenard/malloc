@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 14:36:09 by lubenard          #+#    #+#             */
-/*   Updated: 2021/08/31 14:54:37 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/01 12:12:36 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,18 +14,15 @@
 
 #include <stdio.h>
 
-char	*ft_strncpy(char *dest, char const *src, unsigned int n)
-{
+char	*ft_strncpy(char *dest, char const *src, unsigned int n) {
 	unsigned int i;
 
 	i = 0;
-	while (src[i] && i < n)
-	{
+	while (src[i] && i < n) {
 		dest[i] = src[i];
 		i++;
 	}
-	while (i < n)
-	{
+	while (i < n) {
 		dest[i++] = '\0';
 	}
 	return (dest);
@@ -33,11 +30,12 @@ char	*ft_strncpy(char *dest, char const *src, unsigned int n)
 
 int main(void) {
 	char *str = malloc(6);
-	free(str);
 	//ft_strncpy(str, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", 6);
 	//printf("[MAIN TEST] String is '%s'\n", str);
 	//char *str2 = malloc(0);
-	//char *str3 = malloc(10);
-	//char *str4 = malloc(10);
-	//char *str5 = malloc(10);
+	char *str3 = malloc(10);
+	char *str4 = malloc(10);
+	char *str5 = malloc(10);
+	free(str4);
+	free(str5);
 }
