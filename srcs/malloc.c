@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/02 17:58:41 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/02 18:24:29 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,32 +30,13 @@ t_alloc *init_node(size_t size_requested) {
 		printf("Map failed\n");
 	printf("Node pointer is %p\n", node);
 	node->size_remaining = size_requested - sizeof(t_alloc);
-	node->is_free = 1;
+	// If they are freed, is_free = 1
+	node->is_free = 0;
 	node->initial_size = size_requested;
 	node->next = NULL;
 	node->prev = NULL;
 	printf("Just created a node sir, size is %zu (%lu - %lu)\n", node->size_remaining, size_requested, sizeof(t_alloc));
 	return node;
-}
-
-void create_link_new_node(size_t size_of_block) {
-	t_alloc *node;
-
-	if (size_of_block > PAGESIZE) {
-		node = init_node(size_of_block);
-	} else {
-		node = init_node(PAGESIZE);
-	}
-	// Link only if g_curr_node exist
-	if (g_curr_node)
-		g_curr_node->next = node;
-	g_curr_node = node;
-}
-
-void place_footer() {
-	int *test = (int *)((char*) g_curr_node + sizeof(t_alloc) + g_curr_node->size_remaining);
-	printf("Placing magic at address %p\n", test);
-	*test = MAGIC_NUMBER;
 }
 
 void print_linked_list() {
@@ -65,8 +46,10 @@ void print_linked_list() {
 	while (node->prev) {
 		node = node->prev;
 	}
-	while (node->next) {
-		printf("---Node---\n");
+
+	printf("----Start showing linked list, current node address is %p----\n", node);
+	while (node) {
+		printf("---Node---%s\n", (g_curr_node == node) ? " <-- This is g_curr_node" : "");
 		printf("initial_size : %lu\n", node->initial_size);
 		printf("size_remaining is %lu\n", node->size_remaining);
 		printf("is_free %d\n", node->is_free);
@@ -74,8 +57,33 @@ void print_linked_list() {
 		printf("prev %p\n", node->prev);
 		node = node->next;
 	}
-
+	printf("----End of linked list----\n");
 }
+
+void create_link_new_node(size_t size_of_block) {
+	t_alloc *node;
+
+	printf("Going in this function ??\n");
+	if (size_of_block > PAGESIZE) {
+		node = init_node(size_of_block);
+	} else {
+		node = init_node(PAGESIZE);
+	}
+	// Link only if g_curr_node exist
+	if (g_curr_node) {
+		node->prev = g_curr_node;
+		g_curr_node->next = node;
+	}
+	g_curr_node = node;
+	print_linked_list();
+}
+
+void place_footer() {
+	int *test = (int *)((char*) g_curr_node + sizeof(t_alloc) + g_curr_node->size_remaining);
+	printf("Placing magic at address %p\n", test);
+	*test = MAGIC_NUMBER;
+}
+
 
 void split_node(t_alloc *node, size_t size_of_block) {
 	t_alloc *new_node;
@@ -86,7 +94,7 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	new_node->size_remaining = node->size_remaining;
 	printf("Size of new node is %lu\n", new_node->size_remaining);
 	node->size_remaining = size_of_block;
-	node->is_free = 0;
+	//node->is_free = 0;
 	new_node->next = NULL;
 	node->next = new_node;
 	new_node->prev = node;
@@ -95,12 +103,12 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	place_footer();
 	g_curr_node = new_node;
 	printf("Placed g_curr_node @ %p\n", g_curr_node);
-	} else {
+	}/* else {
 		// If the size is 0, just create a new node of 4096...I guess ?
 		create_link_new_node(PAGESIZE);
 		node->next = g_curr_node;
 		g_curr_node->prev = node;
-	}
+	}*/
 }
 
 void	*malloc(size_t size) {
