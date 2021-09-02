@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/02 14:58:22 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/02 17:58:41 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ t_alloc *init_node(size_t size_requested) {
 	printf("Node pointer is %p\n", node);
 	node->size_remaining = size_requested - sizeof(t_alloc);
 	node->is_free = 1;
+	node->initial_size = size_requested;
 	node->next = NULL;
 	node->prev = NULL;
 	printf("Just created a node sir, size is %zu (%lu - %lu)\n", node->size_remaining, size_requested, sizeof(t_alloc));
@@ -66,6 +67,7 @@ void print_linked_list() {
 	}
 	while (node->next) {
 		printf("---Node---\n");
+		printf("initial_size : %lu\n", node->initial_size);
 		printf("size_remaining is %lu\n", node->size_remaining);
 		printf("is_free %d\n", node->is_free);
 		printf("next %p\n", node->next);
