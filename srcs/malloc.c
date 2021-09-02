@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/02 18:24:29 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/02 18:29:33 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,8 +93,8 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	printf("Splitting at addr %p, computed this way : %p + %lu + %zu + %lu + 1 = %p\n", new_node, node, sizeof(t_alloc), size_of_block, sizeof(int), ((char*) node + sizeof(t_alloc) + size_of_block + sizeof(int) + 1));
 	new_node->size_remaining = node->size_remaining;
 	printf("Size of new node is %lu\n", new_node->size_remaining);
+	new_node->initial_size = node->initial_size;
 	node->size_remaining = size_of_block;
-	//node->is_free = 0;
 	new_node->next = NULL;
 	node->next = new_node;
 	new_node->prev = node;

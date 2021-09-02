@@ -6,7 +6,7 @@
 #    By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/08/26 14:06:44 by lubenard          #+#    #+#              #
-#    Updated: 2021/08/30 20:47:16 by lubenard         ###   ########.fr        #
+#    Updated: 2021/09/02 19:07:39 by lubenard         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,11 +20,13 @@ SRCDIR = srcs
 
 SRC_FILES_C = malloc.c
 
+CC = clang
+
 SRCS_C = $(addprefix $(SRCDIR)/, $(SRC_FILES_C))
 
 OBJ_C = $(SRCS_C:.c=.o)
 
-CFLAGS = -Wall -Wextra -Werror -g3
+CFLAGS = -Wall -Wextra -Werror -g3 -fPIC
 
 all: $(NAME)
 
@@ -32,6 +34,7 @@ $(NAME): $(OBJ_C)
 	@printf "\033[33mLinking of $(NAME)...\033[0m"
 	@ar rcs $(NAME) $(OBJ_C)
 	@printf "\033[32m[✓]\033[0m\n"
+	@ar rcs libft_malloc.dylib $(OBJ_C)
 	@ln -s libft_malloc_$(HOSTTYPE).so libft_malloc.so
 
 %.o : %.c
@@ -48,6 +51,7 @@ fclean: clean
 	@printf "\033[31mSuppression de $(NAME)...\033[0m"
 	@rm -f $(NAME)
 	@rm -f libft_malloc.so
+	@rm -rf a.out a.out.dSYM
 	@printf "\033[32m[✓]\033[0m\n"
 
 re: fclean all
