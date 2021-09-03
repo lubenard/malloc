@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:55:29 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/02 17:57:25 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/03 16:19:37 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,9 @@ void	*malloc(size_t size);
 void	*realloc(void *ptr, size_t size);
 
 typedef struct s_alloc {
-	size_t size_remaining;
-	size_t initial_size;
-	short is_free;
+	size_t size;
+	//size_t initial_size;
+	short is_busy;
 	struct s_alloc *next;
 	struct s_alloc *prev;
 }				t_alloc;
