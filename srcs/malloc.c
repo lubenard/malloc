@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/03 16:36:07 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/03 17:17:34 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,12 +87,13 @@ void place_footer() {
 void split_node(t_alloc *node, size_t size_of_block) {
 	t_alloc *new_node;
 
-	//if (node->size > 0) {
 	new_node = (t_alloc *)((char*) node + sizeof(t_alloc) + size_of_block + sizeof(int) + 1);
 	printf("Splitting at addr %p, computed this way : %p + %lu + %zu + %lu + 1 = %p\n", new_node, node, sizeof(t_alloc), size_of_block, sizeof(int), ((char*) node + sizeof(t_alloc) + size_of_block + sizeof(int) + 1));
-	new_node->size = node->size;
-	//new_node->initial_size = node->initial_size;
+	new_node->size = node->size - size_of_block;
 	node->size = size_of_block;
+	printf("Node %p is marqued as not available\n", node);
+	node->is_busy = 2;
+	new_node->is_busy = 1;
 	new_node->next = NULL;
 	node->next = new_node;
 	new_node->prev = node;
@@ -100,12 +101,6 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	place_footer();
 	g_curr_node = new_node;
 	printf("Placed g_curr_node @ %p\n", g_curr_node);
-	/*} else {
-		// If the size is 0, just create a new node of 4096...I guess ?
-		create_link_new_node(PAGESIZE);
-		node->next = g_curr_node;
-		g_curr_node->prev = node;
-	}*/
 }
 
 void	*malloc(size_t size) {
@@ -118,23 +113,27 @@ void	*malloc(size_t size) {
 		create_link_new_node(size);
 		printf("Head of linked list is now init @ %p\n", g_curr_node);
 	}
-	if (size > g_curr_node->size || g_curr_node->is_busy == 2) {
+	if (size > g_curr_node->size) {
 		printf("Size (%lu) > g_curr_node->size (%lu)\n", size, g_curr_node->size);
 		create_link_new_node(size);
 	} else {
+		if (g_curr_node->is_busy == 2)
+			create_link_new_node(size);
 		printf("Found space for %lu bytes in block located at %p\n", size, g_curr_node);
 		//g_curr_node->size -= size;
-		printf("Remaining size of g_curr_node is %zu\n", g_curr_node->size);
+		//printf("Remaining size of g_curr_node is %zu\n", g_curr_node->size);
 		//We need to split the block from other blocks
-		printf("g_curr_node, size %lu - %lu\n", g_curr_node->size, size);
+		printf("Should split ? g_curr_node size %lu - %lu (size_requested in malloc) = %s\n", g_curr_node->size, size, (g_curr_node->size - size > 0) ? "YES" : "NO");
 		if (g_curr_node->size - size > 0) {
 			split_node(g_curr_node, size);
-		}
+		} else
+			g_curr_node->is_busy = 2;
 	}
 	return_node_ptr = g_curr_node;
 	printf("Returning %p from malloc call. Original ptr is %p\n", return_node_ptr + sizeof(t_alloc), return_node_ptr);
+	//return_node_ptr->is_busy = 2;
+	//printf("Node %p is marqued as not available\n", return_node_ptr);
 	print_linked_list();
-	return_node_ptr->is_busy = 2;
 	printf("~~~~~~~END MALLOC~~~~~~~~~\n");
 	return ((char*) return_node_ptr + sizeof(t_alloc));
 }
