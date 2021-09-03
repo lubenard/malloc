@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/03 17:17:34 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/03 17:37:57 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,6 @@ t_alloc *init_node(size_t size_requested) {
 	node->size = size_requested - sizeof(t_alloc);
 	// Freed: 0, Available: 1, Not Available: 2
 	node->is_busy = 1;
-	//node->initial_size = size_requested;
 	node->next = NULL;
 	node->prev = NULL;
 	return node;
@@ -50,7 +49,6 @@ void print_linked_list() {
 	while (node) {
 		printf("---Node---%s\n", (g_curr_node == node) ? " <-- This is g_curr_node" : "");
 		printf("Node address %p\n", node);
-		//printf("initial_size : %lu\n", node->initial_size);
 		printf("size is %lu\n", node->size);
 		printf("is_free %d\n", node->is_busy);
 		printf("next %p\n", node->next);
@@ -74,7 +72,6 @@ void create_link_new_node(size_t size_of_block) {
 		g_curr_node->next = node;
 	}
 	g_curr_node = node;
-	//print_linked_list();
 }
 
 void place_footer() {
@@ -120,8 +117,6 @@ void	*malloc(size_t size) {
 		if (g_curr_node->is_busy == 2)
 			create_link_new_node(size);
 		printf("Found space for %lu bytes in block located at %p\n", size, g_curr_node);
-		//g_curr_node->size -= size;
-		//printf("Remaining size of g_curr_node is %zu\n", g_curr_node->size);
 		//We need to split the block from other blocks
 		printf("Should split ? g_curr_node size %lu - %lu (size_requested in malloc) = %s\n", g_curr_node->size, size, (g_curr_node->size - size > 0) ? "YES" : "NO");
 		if (g_curr_node->size - size > 0) {
@@ -131,8 +126,6 @@ void	*malloc(size_t size) {
 	}
 	return_node_ptr = g_curr_node;
 	printf("Returning %p from malloc call. Original ptr is %p\n", return_node_ptr + sizeof(t_alloc), return_node_ptr);
-	//return_node_ptr->is_busy = 2;
-	//printf("Node %p is marqued as not available\n", return_node_ptr);
 	print_linked_list();
 	printf("~~~~~~~END MALLOC~~~~~~~~~\n");
 	return ((char*) return_node_ptr + sizeof(t_alloc));

@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 14:36:09 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/03 16:45:00 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/03 17:31:41 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,12 @@ char	*ft_strncpy(char *dest, char const *src, unsigned int n) {
 }
 
 int main(void) {
-	char *str = malloc(5000);
+	//char *str = malloc(5000);
 	char *str2 = malloc(20);
 	//ft_strncpy(str, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", 6);
 	//printf("[MAIN TEST] String is '%s'\n", str);
 	//char *str2 = malloc(0);
+	char *str = malloc(5000);
 	char *str3 = malloc(10);
 	/*char *str4 = malloc(10);
 	char *str5 = malloc(10);*/
