@@ -6,7 +6,7 @@
 #    By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/08/26 14:06:44 by lubenard          #+#    #+#              #
-#    Updated: 2021/09/02 19:07:39 by lubenard         ###   ########.fr        #
+#    Updated: 2021/09/06 16:16:11 by lubenard         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,20 +26,20 @@ SRCS_C = $(addprefix $(SRCDIR)/, $(SRC_FILES_C))
 
 OBJ_C = $(SRCS_C:.c=.o)
 
-CFLAGS = -Wall -Wextra -Werror -g3 -fPIC
+CFLAGS = -Wall -Wextra -Werror -g3
 
 all: $(NAME)
 
 $(NAME): $(OBJ_C)
 	@printf "\033[33mLinking of $(NAME)...\033[0m"
-	@ar rcs $(NAME) $(OBJ_C)
+	@$(CC) $(CFLAGS) -shared -o $(NAME) $(OBJ_C)
 	@printf "\033[32m[✓]\033[0m\n"
-	@ar rcs libft_malloc.dylib $(OBJ_C)
+	#@ar rcs libft_malloc.dylib $(OBJ_C)
 	@ln -s libft_malloc_$(HOSTTYPE).so libft_malloc.so
 
 %.o : %.c
 	@printf "\033[36mCompilation de $<...\033[0m"
-	@clang -c $(CFLAGS) $< -o $@ -Iincludes
+	@$(CC) -c $(CFLAGS) -fPIC $< -o $@ -Iincludes
 	@printf "\033[32m[✓]\033[0m\n"
 
 clean:
