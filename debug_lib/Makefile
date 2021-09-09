@@ -6,19 +6,26 @@
 #    By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/08/26 14:06:44 by lubenard          #+#    #+#              #
-#    Updated: 2021/09/09 17:38:36 by lubenard         ###   ########.fr        #
+#    Updated: 2021/09/09 17:37:12 by lubenard         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-ifeq ($(HOSTTYPE),)
-    HOSTTYPE := $(shell uname -m)_$(shell uname -s)
-endif
-
-NAME = libft_malloc_$(HOSTTYPE).so
+NAME = libft_malloc_printf.a
 
 SRCDIR = srcs
 
-SRC_FILES_C = malloc.c
+SRC_FILES_C = memlib.c\
+			  strlib.c\
+			  printk/printk.c\
+			  printk/parse.c\
+			  printk/fill_buffer.c\
+			  printk/flags/flag_c.c\
+			  printk/flags/flag_di.c\
+			  printk/flags/flag_o.c\
+			  printk/flags/flag_p.c\
+			  printk/flags/flag_s.c\
+			  printk/flags/flag_u.c\
+			  printk/flags/flag_x.c\
 
 CC = clang
 
@@ -32,10 +39,9 @@ all: $(NAME)
 
 $(NAME): $(OBJ_C)
 	@printf "\033[33mLinking of $(NAME)...\033[0m"
-	@$(CC) $(CFLAGS) -shared -o $(NAME) $(OBJ_C) tmp_lib/libft_malloc_printf.so
+	@ar rcs $(NAME) $(OBJ_C)
+	#@$(CC) $(CFLAGS) -shared -o $(NAME) $(OBJ_C)
 	@printf "\033[32m[✓]\033[0m\n"
-	#@ar rcs libft_malloc.dylib $(OBJ_C)
-	@ln -s libft_malloc_$(HOSTTYPE).so libft_malloc.so
 
 %.o : %.c
 	@printf "\033[36mCompilation de $<...\033[0m"
