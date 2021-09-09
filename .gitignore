@@ -4,3 +4,4 @@ a.out.dSYM
 libft_malloc.so
 libft_malloc_x86_64_Darwin.so
 libft_malloc.dylib
+*.a
