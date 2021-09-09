@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/03 17:37:57 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/09 18:02:35 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,18 +17,30 @@
 
 t_alloc *g_curr_node = 0;
 
+// DEBUG ONLY
+#include <unistd.h>
+#include "../tmp_lib/srcs/iolib.h"
+
+void putstr(char *str) {
+	int len = 0;
+	while (str[len])
+		len++;
+	write(1, str, len);
+}
+// END DEBUG ONLY
+
 t_alloc *init_node(size_t size_requested) {
 	t_alloc *node;
 
 	if (size_requested > PAGESIZE) {
-		printf("Creating NEW node: %lu bytes long (%lu - %lu)\n", size_requested + sizeof(t_alloc), size_requested, sizeof(t_alloc));
+		printk("Creating NEW node: %lu bytes long (%lu - %lu)\n", size_requested + sizeof(t_alloc), size_requested, sizeof(t_alloc));
 		size_requested += sizeof(t_alloc);
-	} else
-		printf("Creating NEW node: %lu bytes long (%lu - %lu)\n", size_requested - sizeof(t_alloc), size_requested, sizeof(t_alloc));
+	} //else
+		printk("Creating NEW node: %lu bytes long (%lu - %lu)\n", size_requested - sizeof(t_alloc), size_requested, sizeof(t_alloc));
 	node = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	if (node == MAP_FAILED)
-		printf("Map failed\n");
-	printf("Node pointer is %p\n", node);
+	//if (node == MAP_FAILED)
+		printk("Map failed\n");
+	printk("Node pointer is %p\n", node);
 	node->size = size_requested - sizeof(t_alloc);
 	// Freed: 0, Available: 1, Not Available: 2
 	node->is_busy = 1;
@@ -45,17 +57,17 @@ void print_linked_list() {
 		node = node->prev;
 	}
 
-	printf("----Start showing linked list----\n");
+	printk("----Start showing linked list----\n");
 	while (node) {
-		printf("---Node---%s\n", (g_curr_node == node) ? " <-- This is g_curr_node" : "");
-		printf("Node address %p\n", node);
-		printf("size is %lu\n", node->size);
-		printf("is_free %d\n", node->is_busy);
-		printf("next %p\n", node->next);
-		printf("prev %p\n", node->prev);
+		printk("---Node---%s\n", (g_curr_node == node) ? " <-- This is g_curr_node" : "");
+		printk("Node address %p\n", node);
+		printk("size is %lu\n", node->size);
+		printk("is_free %d\n", node->is_busy);
+		printk("next %p\n", node->next);
+		printk("prev %p\n", node->prev);
 		node = node->next;
 	}
-	printf("----End of linked list----\n");
+	printk("----End of linked list----\n");
 }
 
 void create_link_new_node(size_t size_of_block) {
@@ -76,19 +88,18 @@ void create_link_new_node(size_t size_of_block) {
 
 void place_footer() {
 	int *test = (int *)((char*) g_curr_node + sizeof(t_alloc) + g_curr_node->size);
-	printf("Placing magic at address %p\n", test);
+	printk("Placing magic at address %p\n", test);
 	*test = MAGIC_NUMBER;
 }
-
 
 void split_node(t_alloc *node, size_t size_of_block) {
 	t_alloc *new_node;
 
 	new_node = (t_alloc *)((char*) node + sizeof(t_alloc) + size_of_block + sizeof(int) + 1);
-	printf("Splitting at addr %p, computed this way : %p + %lu + %zu + %lu + 1 = %p\n", new_node, node, sizeof(t_alloc), size_of_block, sizeof(int), ((char*) node + sizeof(t_alloc) + size_of_block + sizeof(int) + 1));
+	printk("Splitting at addr %p, computed this way : %p + %lu + %zu + %lu + 1 = %p\n", new_node, node, sizeof(t_alloc), size_of_block, sizeof(int), ((char*) node + sizeof(t_alloc) + size_of_block + sizeof(int) + 1));
 	new_node->size = node->size - size_of_block;
 	node->size = size_of_block;
-	printf("Node %p is marqued as not available\n", node);
+	printk("Node %p is marqued as not available\n", node);
 	node->is_busy = 2;
 	new_node->is_busy = 1;
 	new_node->next = NULL;
@@ -97,7 +108,7 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	// Add "Footer" to check if it is not overwriting.
 	place_footer();
 	g_curr_node = new_node;
-	printf("Placed g_curr_node @ %p\n", g_curr_node);
+	printk("Placed g_curr_node @ %p\n", g_curr_node);
 }
 
 void	*malloc(size_t size) {
@@ -105,29 +116,30 @@ void	*malloc(size_t size) {
 
 	if (size == 0)
 		return NULL;
-	printf("-------REQUESTING NEW MALLOC---------\n");
+	printk("-------REQUESTING NEW MALLOC---------\n");
 	if (!g_curr_node) {
 		create_link_new_node(size);
-		printf("Head of linked list is now init @ %p\n", g_curr_node);
+		printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
 	if (size > g_curr_node->size) {
-		printf("Size (%lu) > g_curr_node->size (%lu)\n", size, g_curr_node->size);
+		printk("Size (%lu) > g_curr_node->size (%lu)\n", size, g_curr_node->size);
 		create_link_new_node(size);
 	} else {
 		if (g_curr_node->is_busy == 2)
 			create_link_new_node(size);
-		printf("Found space for %lu bytes in block located at %p\n", size, g_curr_node);
+		printk("Found space for %lu bytes in block located at %p\n", size, g_curr_node);
 		//We need to split the block from other blocks
-		printf("Should split ? g_curr_node size %lu - %lu (size_requested in malloc) = %s\n", g_curr_node->size, size, (g_curr_node->size - size > 0) ? "YES" : "NO");
+		printk("Should split ? g_curr_node size %lu - %lu (size_requested in malloc) = %s\n", g_curr_node->size, size, (g_curr_node->size - size > 0) ? "YES" : "NO");
 		if (g_curr_node->size - size > 0) {
 			split_node(g_curr_node, size);
-		} else
+		} else {
 			g_curr_node->is_busy = 2;
+		}
 	}
 	return_node_ptr = g_curr_node;
-	printf("Returning %p from malloc call. Original ptr is %p\n", return_node_ptr + sizeof(t_alloc), return_node_ptr);
-	print_linked_list();
-	printf("~~~~~~~END MALLOC~~~~~~~~~\n");
+	printk("Returning %p from malloc call. Original ptr is %p\n", return_node_ptr + sizeof(t_alloc), return_node_ptr);
+	//print_linked_list();
+	printk("~~~~~~~END MALLOC~~~~~~~~~\n");
 	return ((char*) return_node_ptr + sizeof(t_alloc));
 }
 
@@ -137,12 +149,12 @@ void merge_blocks(t_alloc *node_ptr) {
 	t_alloc *node_tmp_2;
 
 	node_tmp = node_ptr;
-	printf("Merge block, actually on %p\n", node_tmp);
+	printk("Merge block, actually on %p\n", node_tmp);
 	while (node_tmp->prev) {
-		printf("Reversing linked list : Actually on %p, going on %p\n", node_ptr, node_tmp->prev);
+		printk("Reversing linked list : Actually on %p, going on %p\n", node_ptr, node_tmp->prev);
 		node_tmp = node_tmp->prev;
 	}
-	printf("Current merge pointer is %p\n", node_tmp);
+	printk("Current merge pointer is %p\n", node_tmp);
 	while (node_tmp->next) {
 		if (node_tmp->is_busy == 0) {
 			break;
@@ -154,7 +166,7 @@ void merge_blocks(t_alloc *node_ptr) {
 	while (node_tmp->next) {
 		if (node_tmp->is_busy) {
 			node_tmp_2->size += node_tmp->size;
-			printf("Merging %p with %p, for total size of %lu\n", node_tmp_2, node_tmp, node_tmp_2->size);
+			printk("Merging %p with %p, for total size of %lu\n", node_tmp_2, node_tmp, node_tmp_2->size);
 		}
 		node_tmp = node_tmp->next;
 	}
@@ -165,12 +177,12 @@ void	free(void *ptr) {
 
 	if (ptr == 0)
 		return;
-	printf("---------REQUESTING FREE------------\n");
-	printf("Getting %p from arg\n", ptr);
+	printk("---------REQUESTING FREE------------\n");
+	printk("Getting %p from arg\n", ptr);
 	node_ptr = (t_alloc *)((char*) ptr - sizeof(t_alloc));
 	node_ptr->is_busy = 0;
-	printf("Freeing from address %p\n", node_ptr);
-	merge_blocks(node_ptr);
+	printk("Freeing from address %p\n", node_ptr);
+	//merge_blocks(node_ptr);
 	//munmap(node_ptr, sizeof(t_alloc) + node_ptr->size);
 }
 
