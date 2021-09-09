@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/09 18:02:35 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/09 18:12:30 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ t_alloc *g_curr_node = 0;
 
 // DEBUG ONLY
 #include <unistd.h>
-#include "../tmp_lib/srcs/iolib.h"
+#include "../debug_lib/srcs/iolib.h"
 
 void putstr(char *str) {
 	int len = 0;
@@ -35,10 +35,10 @@ t_alloc *init_node(size_t size_requested) {
 	if (size_requested > PAGESIZE) {
 		printk("Creating NEW node: %lu bytes long (%lu - %lu)\n", size_requested + sizeof(t_alloc), size_requested, sizeof(t_alloc));
 		size_requested += sizeof(t_alloc);
-	} //else
+	} else
 		printk("Creating NEW node: %lu bytes long (%lu - %lu)\n", size_requested - sizeof(t_alloc), size_requested, sizeof(t_alloc));
 	node = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	//if (node == MAP_FAILED)
+	if (node == MAP_FAILED)
 		printk("Map failed\n");
 	printk("Node pointer is %p\n", node);
 	node->size = size_requested - sizeof(t_alloc);

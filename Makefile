@@ -6,7 +6,7 @@
 #    By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/08/26 14:06:44 by lubenard          #+#    #+#              #
-#    Updated: 2021/09/09 18:05:41 by lubenard         ###   ########.fr        #
+#    Updated: 2021/09/09 18:11:57 by lubenard         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -32,8 +32,8 @@ all: $(NAME)
 
 $(NAME): $(OBJ_C)
 	@printf "\033[33mLinking of $(NAME)...\033[0m"
-	make -C debug_lib
-	@$(CC) $(CFLAGS) -shared -o $(NAME) $(OBJ_C) tmp_lib/libft_malloc_printf.so
+	@cd debug_lib && make
+	@$(CC) $(CFLAGS) -shared -o $(NAME) $(OBJ_C) debug_lib/libft_malloc_printf.a
 	@printf "\033[32m[✓]\033[0m\n"
 	#@ar rcs libft_malloc.dylib $(OBJ_C)
 	@ln -s libft_malloc_$(HOSTTYPE).so libft_malloc.so

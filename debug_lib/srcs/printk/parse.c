@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/04/27 16:44:02 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/09 17:31:16 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/09 18:15:44 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,8 @@ int replace(const char *str, int *i, va_list *ap, t_output *output)
 	int j;
 
 	(*i)++;
+	if (str[*i] == 'l')
+		(*i)++;
 	if ((j = ft_strchri("csdixX%pou", str[find_flag(str, *i)])) >= 0)
 		g_pointer_array[j](str, i, ap, output);
 	else
