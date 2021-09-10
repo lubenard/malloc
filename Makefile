@@ -6,7 +6,7 @@
 #    By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/08/26 14:06:44 by lubenard          #+#    #+#              #
-#    Updated: 2021/09/09 18:11:57 by lubenard         ###   ########.fr        #
+#    Updated: 2021/09/10 16:06:03 by lubenard         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -36,7 +36,7 @@ $(NAME): $(OBJ_C)
 	@$(CC) $(CFLAGS) -shared -o $(NAME) $(OBJ_C) debug_lib/libft_malloc_printf.a
 	@printf "\033[32m[✓]\033[0m\n"
 	#@ar rcs libft_malloc.dylib $(OBJ_C)
-	@ln -s libft_malloc_$(HOSTTYPE).so libft_malloc.so
+	@ln -sf libft_malloc_$(HOSTTYPE).so libft_malloc.so
 
 %.o : %.c
 	@printf "\033[36mCompilation de $<...\033[0m"
@@ -52,7 +52,7 @@ fclean: clean
 	@printf "\033[31mSuppression de $(NAME)...\033[0m"
 	@rm -f $(NAME)
 	@rm -f libft_malloc.so
-	@rm -rf a.out a.out.dSYM
+	#@rm -rf a.out a.out.dSYM
 	@printf "\033[32m[✓]\033[0m\n"
 
 re: fclean all
