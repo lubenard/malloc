@@ -6,7 +6,7 @@
 #    By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/08/26 14:06:44 by lubenard          #+#    #+#              #
-#    Updated: 2021/09/10 16:06:03 by lubenard         ###   ########.fr        #
+#    Updated: 2021/09/15 15:46:12 by lubenard         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -35,7 +35,6 @@ $(NAME): $(OBJ_C)
 	@cd debug_lib && make
 	@$(CC) $(CFLAGS) -shared -o $(NAME) $(OBJ_C) debug_lib/libft_malloc_printf.a
 	@printf "\033[32m[✓]\033[0m\n"
-	#@ar rcs libft_malloc.dylib $(OBJ_C)
 	@ln -sf libft_malloc_$(HOSTTYPE).so libft_malloc.so
 
 %.o : %.c
@@ -60,11 +59,15 @@ re: fclean all
 relaunch: fclean launch
 
 test: re
-	@clang main.c libft_malloc.so
+	@clang -g3 main.c libft_malloc.so
 	@./a.out
 
+ltest: all
+	@clang -g3 main.c libft_malloc.so
+	@lldb ./a.out
+
 vtest: re
-	@clang main.c libft_malloc.so
+	@clang -g3 main.c libft_malloc.so
 	@valgrind ./a.out
 
 .SILENT:

@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/10 17:28:14 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/15 15:57:12 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ t_alloc *init_node(size_t size_requested) {
 	node = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 	if (node == MAP_FAILED)
 		printk("Map failed\n");
+	printk("Node begin at %p and end at %p\n", node, (t_alloc *)((char *)node + 4096));
 	printk("Node pointer is %p\n", node);
 	node->size = size_requested - sizeof(t_alloc);
 	// Freed: 0, Available: 1, Not Available: 2
@@ -92,15 +93,32 @@ void place_footer() {
 	*test = MAGIC_NUMBER;
 }
 
+void check_structure_integrity() {
+	t_alloc *node_tmp;
+
+	printk("Just checking structure integrity...\n");
+	node_tmp = g_curr_node;
+	while (node_tmp->prev) {
+		node_tmp = node_tmp->prev;
+	}
+	while (node_tmp->next) {
+		if (node_tmp->size > 4096 || node_tmp->size < 0)
+			printk("Integrity of data compromised at node %p. Size is %d\n", node_tmp, node_tmp->size);
+		node_tmp = node_tmp->next;
+	}
+}
+
 void split_node(t_alloc *node, size_t size_of_block) {
 	t_alloc *new_node;
 
 	new_node = (t_alloc *)((char*) node + sizeof(t_alloc) + size_of_block + sizeof(int) + 1);
+	check_structure_integrity();
 	printk("Splitting at addr %p, computed this way : %p + %lu + %zu + %lu + 1 = %p\n", new_node, node, sizeof(t_alloc), size_of_block, sizeof(int), ((char*) node + sizeof(t_alloc) + size_of_block + sizeof(int) + 1));
+	printk("new_node->size (%lu) = %lu - %lu\n", new_node->size, node->size, size_of_block);
 	new_node->size = node->size - size_of_block;
-	printk("Size of new node is %lu bytes\n", new_node->size);
+	//printk("Size of new node is %lu bytes\n", new_node->size);
 	node->size = size_of_block;
-	printk("Node %p is marqued as not available\n", node);
+	//printk("Node %p is marqued as not available\n", node);
 	node->is_busy = 2;
 	new_node->is_busy = 1;
 	new_node->next = NULL;
