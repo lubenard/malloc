@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/15 18:24:00 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/16 15:28:23 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,6 +43,7 @@ t_alloc *init_node(size_t size_requested) {
 	printk("Node begin at %p and end at %p\n", node, (t_alloc *)((char *)node + 4096));
 	printk("Node pointer is %p\n", node);
 	node->size = size_requested - sizeof(t_alloc);
+	node->buffer_overflow = MAGIC_NUMBER;
 	// Freed: 0, Available: 1, Not Available: 2
 	node->is_busy = 1;
 	node->next = NULL;
@@ -87,31 +88,24 @@ void create_link_new_node(size_t size_of_block) {
 	g_curr_node = node;
 }
 
-void place_footer() {
-	int *test = (int *)((char*) g_curr_node + sizeof(t_alloc) + g_curr_node->size);
-	printk("Placing magic at address %p\n", test);
-	*test = MAGIC_NUMBER;
-}
-
 void split_node(t_alloc *node, size_t size_of_block) {
 	t_alloc *new_node;
 
-	new_node = (t_alloc *)((char*) node + sizeof(t_alloc) + size_of_block + sizeof(int) + 1);
-	printk("Splitting at addr %p, computed this way : %p + %lu + %zu + %lu + 1 = %p\n", new_node, node, sizeof(t_alloc), size_of_block, sizeof(int), ((char*) node + sizeof(t_alloc) + size_of_block + sizeof(int) + 1));
+	new_node = (t_alloc *)((char*) node + sizeof(t_alloc) + size_of_block + 1);
+	printk("Splitting at addr %p, computed this way : %p + %lu + %zu + 1 = %p\n", new_node, node, sizeof(t_alloc), size_of_block, ((char*) node + sizeof(t_alloc) + size_of_block + 1));
 
-	new_node->size = node->size - size_of_block - sizeof(t_alloc) - sizeof(int) - 1;
+	new_node->size = node->size - size_of_block - sizeof(t_alloc) - 1;
 
-	printk("new_node->size (%lu) = %lu - %lu - %lu\n", new_node->size, node->size, size_of_block, sizeof(t_alloc));
+	printk("new_node->size (%lu) = %lu - (%lu + %lu + %lu)\n", new_node->size, node->size, size_of_block, sizeof(t_alloc), sizeof(int));
 
 	node->size = size_of_block + sizeof(t_alloc) + sizeof(int);
 	//printk("Node %p is marqued as not available\n", node);
 	node->is_busy = 2;
 	new_node->is_busy = 1;
+	node->buffer_overflow = MAGIC_NUMBER;
 	new_node->next = NULL;
 	node->next = new_node;
 	new_node->prev = node;
-	// Add "Footer" to check if it is not overwriting.
-	place_footer();
 	g_curr_node = new_node;
 	printk("Placed g_curr_node @ %p\n", g_curr_node);
 }
@@ -126,16 +120,16 @@ void	*malloc(size_t size) {
 		create_link_new_node(size);
 		printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
-	if (size + sizeof(t_alloc) > g_curr_node->size ) {
-		printk("Size (%lu) > g_curr_node->size (%lu)\n", size, g_curr_node->size);
+	if (size + sizeof(t_alloc) + sizeof(int) > g_curr_node->size) {
+		printk("Size (%lu) > g_curr_node->size (%lu)\n", size + sizeof(t_alloc) + sizeof(int), g_curr_node->size);
 		create_link_new_node(size);
 	} else {
 		if (g_curr_node->is_busy == 2)
 			create_link_new_node(size);
-		printk("Found space for %lu bytes in block located at %p (%lu bytes available)\n", size, g_curr_node, g_curr_node->size);
+		printk("Found space for %lu bytes in block located at %p (%lu bytes available)\n", size + sizeof(t_alloc) + sizeof(int), g_curr_node, g_curr_node->size);
 		//We need to split the block from other blocks
-		printk("Should split ? g_curr_node size %lu - %lu > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size, (g_curr_node->size - size > 0) ? "YES" : "NO");
-		if (g_curr_node->size - size > 0) {
+		printk("Should split ? g_curr_node size %lu - %lu > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size + sizeof(t_alloc) + sizeof(int), (g_curr_node->size - size + sizeof(t_alloc) + sizeof(int) > 0) ? "YES" : "NO");
+		if (g_curr_node->size - (size + sizeof(t_alloc) + sizeof(int)) > 0) {
 			split_node(g_curr_node, size);
 		} else {
 			g_curr_node->is_busy = 2;

@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 14:36:09 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/15 18:24:23 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/16 12:02:18 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,8 +31,8 @@ char	*ft_strncpy(char *dest, char const *src, unsigned int n) {
 int main(void) {
 	char *str;
 	int i = 0;
-	while (i != 10000) {
-		str = malloc(123);
+	while (i != 1000) {
+		str = malloc(i);
 		printk("I = %d\n", i);
 		i++;
 	}
