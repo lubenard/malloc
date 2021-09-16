@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/16 15:28:23 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/16 17:28:06 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,12 +21,10 @@ t_alloc *g_curr_node = 0;
 #include <unistd.h>
 #include "../debug_lib/srcs/iolib.h"
 #include "../debug_lib/srcs/strlib.h"
-void putstr(char *str) {
-	int len = 0;
-	while (str[len])
-		len++;
-	write(1, str, len);
-}
+
+t_alloc *curr_block_start;
+t_alloc *curr_block_end;
+
 // END DEBUG ONLY
 
 t_alloc *init_node(size_t size_requested) {
@@ -41,6 +39,8 @@ t_alloc *init_node(size_t size_requested) {
 	if (node == MAP_FAILED)
 		printk("Map failed\n");
 	printk("Node begin at %p and end at %p\n", node, (t_alloc *)((char *)node + 4096));
+	curr_block_start = node;
+	curr_block_end = (t_alloc *)((char *)node + 4096);
 	printk("Node pointer is %p\n", node);
 	node->size = size_requested - sizeof(t_alloc);
 	node->buffer_overflow = MAGIC_NUMBER;
@@ -96,10 +96,10 @@ void split_node(t_alloc *node, size_t size_of_block) {
 
 	new_node->size = node->size - size_of_block - sizeof(t_alloc) - 1;
 
-	printk("new_node->size (%lu) = %lu - (%lu + %lu + %lu)\n", new_node->size, node->size, size_of_block, sizeof(t_alloc), sizeof(int));
+	printk("new_node->size (%lu) = %lu - (%lu + %lu + %lu)\n", new_node->size, node->size, size_of_block, sizeof(t_alloc));
 
-	node->size = size_of_block + sizeof(t_alloc) + sizeof(int);
-	//printk("Node %p is marqued as not available\n", node);
+	node->size = size_of_block + sizeof(t_alloc);
+	printk("Node %p is marqued as not available\n", node);
 	node->is_busy = 2;
 	new_node->is_busy = 1;
 	node->buffer_overflow = MAGIC_NUMBER;
@@ -120,26 +120,30 @@ void	*malloc(size_t size) {
 		create_link_new_node(size);
 		printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
-	if (size + sizeof(t_alloc) + sizeof(int) > g_curr_node->size) {
-		printk("Size (%lu) > g_curr_node->size (%lu)\n", size + sizeof(t_alloc) + sizeof(int), g_curr_node->size);
+	if (size + sizeof(t_alloc) > g_curr_node->size) {
+		printk("Size (%lu) > g_curr_node->size (%lu)\n", size + sizeof(t_alloc), g_curr_node->size);
 		create_link_new_node(size);
+		return_node_ptr = g_curr_node;
 	} else {
 		if (g_curr_node->is_busy == 2)
 			create_link_new_node(size);
-		printk("Found space for %lu bytes in block located at %p (%lu bytes available)\n", size + sizeof(t_alloc) + sizeof(int), g_curr_node, g_curr_node->size);
+		printk("Found space for %lu bytes in block located at %p (%lu bytes available)\n", size + sizeof(t_alloc), g_curr_node, g_curr_node->size);
 		//We need to split the block from other blocks
-		printk("Should split ? g_curr_node size %lu - %lu > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size + sizeof(t_alloc) + sizeof(int), (g_curr_node->size - size + sizeof(t_alloc) + sizeof(int) > 0) ? "YES" : "NO");
-		if (g_curr_node->size - (size + sizeof(t_alloc) + sizeof(int)) > 0) {
+		printk("Should split ? g_curr_node size %lu - %lu > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size + sizeof(t_alloc), (g_curr_node->size - size + sizeof(t_alloc) > 0) ? "YES" : "NO");
+		if (g_curr_node->size - (size + sizeof(t_alloc)) > 0) {
+			return_node_ptr = g_curr_node;
 			split_node(g_curr_node, size);
 		} else {
+			printk("Node %p is marqued as not available\n", g_curr_node);
 			g_curr_node->is_busy = 2;
+			return_node_ptr = g_curr_node;
 		}
 	}
-	return_node_ptr = g_curr_node;
-	printk("Returning %p from malloc call. Original ptr is %p\n", return_node_ptr + sizeof(t_alloc), return_node_ptr);
+	printk("Node begin at %p and end at %p\n", curr_block_start, curr_block_end);
+	printk("Returning %p from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + sizeof(t_alloc) + 1), return_node_ptr);
 	//print_linked_list();
 	printk("~~~~~~~END MALLOC~~~~~~~~~\n");
-	return ((char*) return_node_ptr + sizeof(t_alloc));
+	return ((char*) return_node_ptr + sizeof(t_alloc) + 1);
 }
 
 // TODO: Rework this function
@@ -178,7 +182,7 @@ void	free(void *ptr) {
 		return;
 	printk("---------REQUESTING FREE------------\n");
 	printk("Getting %p from arg\n", ptr);
-	node_ptr = (t_alloc *)((char*) ptr - sizeof(t_alloc));
+	node_ptr = (t_alloc *)((char*) ptr - sizeof(t_alloc) - 1);
 	//node_ptr->is_busy = 0;
 	printk("Freeing from address %p\n", node_ptr);
 	printk("----------END FREE---------------\n");
@@ -186,7 +190,7 @@ void	free(void *ptr) {
 	//munmap(node_ptr, sizeof(t_alloc) + node_ptr->size);
 }
 
-void	*realloc(void *ptr, size_t size) {
+/*void	*realloc(void *ptr, size_t size) {
 	printk("---REQUEST REALLOC-----");
 	free(ptr);
 	ptr = malloc(size);
@@ -194,9 +198,9 @@ void	*realloc(void *ptr, size_t size) {
 	return ptr;
 	//(void)ptr;
 	//(void)size;
-}
+}*/
 
-void			*calloc(size_t nitems, size_t size) {
+/*void			*calloc(size_t nitems, size_t size) {
 	void	*ptr;
 
 	printk("---REQUEST CALLOC-----\n");
@@ -206,4 +210,4 @@ void			*calloc(size_t nitems, size_t size) {
 	ft_bzero(ptr, size);
 	printk("----END CALLOC----\n");
 	return (ptr);
-}
+}*/

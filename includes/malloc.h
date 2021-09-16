@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:55:29 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/16 15:27:12 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/16 17:06:40 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,8 @@
 
 void	free(void *ptr);
 void	*malloc(size_t size);
-void	*realloc(void *ptr, size_t size);
-void	*calloc(size_t nitems, size_t size);
+//void	*realloc(void *ptr, size_t size);
+//void	*calloc(size_t nitems, size_t size);
 
 struct s_alloc {
 	int buffer_overflow;

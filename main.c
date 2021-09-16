@@ -6,13 +6,15 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 14:36:09 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/16 12:02:18 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/16 17:29:52 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "includes/malloc.h"
+//#include "includes/malloc.h"
 #include "debug_lib/srcs/iolib.h"
+#include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 char	*ft_strncpy(char *dest, char const *src, unsigned int n) {
 	unsigned int i;
@@ -30,12 +32,23 @@ char	*ft_strncpy(char *dest, char const *src, unsigned int n) {
 
 int main(void) {
 	char *str;
-	int i = 0;
+	int i = 1;
+	int j = 0;
+	write(1, "AAAAAAAAAAAAA\n", 15);
 	while (i != 1000) {
 		str = malloc(i);
-		printk("I = %d\n", i);
+		printk("I = %d, donc j = %d. Pointer received is %p\n", i, i - 1, str);
+		while (j != i - 1) {
+			//printk("Filling pointer character 'a' at %p\n", &str[j]);
+			str[j++] = 'a';
+		}
+		str[i] = '\0';
+		printk("I = %d, str = %s\n", i, str);
+		free(str);
 		i++;
+		j = 0;
 	}
+	//write(1, "Hello world\n", 15);
 	//ft_strncpy(str, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", 6);
 	//printf("[MAIN TEST] String is '%s'\n", str);
 	//char *str2 = malloc(0);

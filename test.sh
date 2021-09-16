@@ -2,6 +2,7 @@
 
 #force make re
 make re
+clang -g3 main.c debug_lib/libft_malloc_printf.a
 
 export DYLD_LIBRARY_PATH=.
 export DYLD_FORCE_FLAT_NAMESPACE=1
