@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/16 17:28:06 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/16 17:44:32 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,15 +30,15 @@ t_alloc *curr_block_end;
 t_alloc *init_node(size_t size_requested) {
 	t_alloc *node;
 
-	if (size_requested > PAGESIZE) {
+	if (size_requested > PAGESIZE - sizeof(t_alloc)) {
 		printk("Creating NEW node: %lu bytes long (%lu - %lu) <- sizeof(t_alloc)\n", size_requested + sizeof(t_alloc), size_requested, sizeof(t_alloc));
 		size_requested += sizeof(t_alloc);
 	} else
 		printk("Creating NEW node: %lu bytes long (%lu - %lu) <- sizeof(t_alloc)\n", size_requested - sizeof(t_alloc), size_requested, sizeof(t_alloc));
 	node = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	if (node == MAP_FAILED)
+	if (!node || node == MAP_FAILED)
 		printk("Map failed\n");
-	printk("Node begin at %p and end at %p\n", node, (t_alloc *)((char *)node + 4096));
+	printk("Node begin at %p and end at %p\n", node, (t_alloc *)((char *)node + size_requested));
 	curr_block_start = node;
 	curr_block_end = (t_alloc *)((char *)node + 4096);
 	printk("Node pointer is %p\n", node);
