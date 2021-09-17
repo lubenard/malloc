@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/16 17:44:32 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/17 18:29:54 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,17 +30,16 @@ t_alloc *curr_block_end;
 t_alloc *init_node(size_t size_requested) {
 	t_alloc *node;
 
-	if (size_requested > PAGESIZE - sizeof(t_alloc)) {
-		printk("Creating NEW node: %lu bytes long (%lu - %lu) <- sizeof(t_alloc)\n", size_requested + sizeof(t_alloc), size_requested, sizeof(t_alloc));
-		size_requested += sizeof(t_alloc);
-	} else
-		printk("Creating NEW node: %lu bytes long (%lu - %lu) <- sizeof(t_alloc)\n", size_requested - sizeof(t_alloc), size_requested, sizeof(t_alloc));
+	printk("Creating NEW node: %lu bytes long (%lu + %lu) <- sizeof(t_alloc)\n", size_requested + sizeof(t_alloc), size_requested, sizeof(t_alloc));
+	size_requested += sizeof(t_alloc);
+	size_requested = (size_requested / PAGESIZE + 1) * PAGESIZE;
+	printk("Creating NEW node: %lu bytes long\n", size_requested);
 	node = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 	if (!node || node == MAP_FAILED)
 		printk("Map failed\n");
 	printk("Node begin at %p and end at %p\n", node, (t_alloc *)((char *)node + size_requested));
 	curr_block_start = node;
-	curr_block_end = (t_alloc *)((char *)node + 4096);
+	curr_block_end = (t_alloc *)((char *)node + size_requested);
 	printk("Node pointer is %p\n", node);
 	node->size = size_requested - sizeof(t_alloc);
 	node->buffer_overflow = MAGIC_NUMBER;
@@ -75,17 +74,14 @@ void print_linked_list() {
 void create_link_new_node(size_t size_of_block) {
 	t_alloc *node;
 
-	if (size_of_block > PAGESIZE) {
-		node = init_node(size_of_block);
-	} else {
-		node = init_node(PAGESIZE);
-	}
+	node = init_node(size_of_block);
 	// Link only if g_curr_node exist
 	if (g_curr_node) {
 		node->prev = g_curr_node;
 		g_curr_node->next = node;
 	}
 	g_curr_node = node;
+	printk("Placed g_curr_node @ %p\n", g_curr_node);
 }
 
 void split_node(t_alloc *node, size_t size_of_block) {
@@ -113,21 +109,26 @@ void split_node(t_alloc *node, size_t size_of_block) {
 void	*malloc(size_t size) {
 	t_alloc *return_node_ptr = 0;
 
-	printk("-------REQUESTING NEW MALLOC---------\n");
+	printk("-------REQUESTING NEW MALLOC OF SIZE %lu---------\n", size);
 	if (size == 0)
 		return NULL;
 	if (!g_curr_node) {
 		create_link_new_node(size);
 		printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
-	if (size + sizeof(t_alloc) > g_curr_node->size) {
+	if (g_curr_node->is_busy == 2 || size + sizeof(t_alloc) > g_curr_node->size) {
 		printk("Size (%lu) > g_curr_node->size (%lu)\n", size + sizeof(t_alloc), g_curr_node->size);
 		create_link_new_node(size);
 		return_node_ptr = g_curr_node;
+		g_curr_node->is_busy = 2;
+		//printk("%d - %lu = %d\n", g_curr_node->size, size + sizeof(t_alloc), g_curr_node - (size + sizeof(t_alloc)));
+		//printk("Should split ? g_curr_node size %d - %d > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size + sizeof(t_alloc), (g_curr_node->size - (size + sizeof(t_alloc)) > 0) ? "YES" : "NO");
+		//if (g_curr_node->size - (size + sizeof(t_alloc)) > 0)
+		//	split_node(g_curr_node, size);
 	} else {
 		if (g_curr_node->is_busy == 2)
 			create_link_new_node(size);
-		printk("Found space for %lu bytes in block located at %p (%lu bytes available)\n", size + sizeof(t_alloc), g_curr_node, g_curr_node->size);
+		printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", size + sizeof(t_alloc), size, sizeof(t_alloc), g_curr_node, g_curr_node->size);
 		//We need to split the block from other blocks
 		printk("Should split ? g_curr_node size %lu - %lu > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size + sizeof(t_alloc), (g_curr_node->size - size + sizeof(t_alloc) > 0) ? "YES" : "NO");
 		if (g_curr_node->size - (size + sizeof(t_alloc)) > 0) {
@@ -200,7 +201,7 @@ void	free(void *ptr) {
 	//(void)size;
 }*/
 
-/*void			*calloc(size_t nitems, size_t size) {
+/*void	*calloc(size_t nitems, size_t size) {
 	void	*ptr;
 
 	printk("---REQUEST CALLOC-----\n");
