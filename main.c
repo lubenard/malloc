@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 14:36:09 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/17 18:27:58 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/20 14:26:55 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,18 +32,17 @@ char	*ft_strncpy(char *dest, char const *src, unsigned int n) {
 
 int main(void) {
 	char *str;
-	int i = 4064;
+	int i = 0;
 	int j = 0;
-	write(1, "AAAAAAAAAAAAA\n", 15);
 	while (i != 10000) {
-		str = malloc(i);
+		str = malloc(i + 1);
 		printk("I = %d, donc j = %d. Pointer received is %p\n", i, i - 1, str);
-		while (j != i - 1) {
-			printk("i = %lu, 'a' at %p\n",j,  &str[j]);
+		while (j != i) {
+			//printk("i = %lu, 'a' at %p\n",j,  &str[j]);
 			str[j++] = 'a';
 		}
 		str[i] = '\0';
-		//printk("I = %d, str = %s\n", i, str);
+		printk("I = %d, placed backslash at %p\n", i, &str[i]);
 		free(str);
 		i++;
 		j = 0;
