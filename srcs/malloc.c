@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/20 18:44:13 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/21 12:26:15 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -206,16 +206,16 @@ void	free(void *ptr) {
 }
 
 void	*realloc(void *ptr, size_t size) {
-	printk("---REQUEST REALLOC-----");
+	printk("---REQUEST REALLOC-----\n");
 	free(ptr);
 	ptr = malloc(size);
-	printk("----END REALLOC----");
+	printk("----END REALLOC----\n");
 	return ptr;
 	//(void)ptr;
 	//(void)size;
 }
 
-/*void	*calloc(size_t nitems, size_t size) {
+void	*calloc(size_t nitems, size_t size) {
 	void	*ptr;
 
 	printk("---REQUEST CALLOC-----\n");
@@ -225,4 +225,4 @@ void	*realloc(void *ptr, size_t size) {
 	ft_bzero(ptr, size);
 	printk("----END CALLOC----\n");
 	return (ptr);
-}*/
+}
