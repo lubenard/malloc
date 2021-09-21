@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/21 12:26:15 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/21 16:46:22 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,8 +107,28 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	printk("Placed g_curr_node @ %p\n", g_curr_node);
 }
 
+t_alloc		*find_place_at_beginning(size_t size_looked) {
+	t_alloc *node_tmp;
+
+	node_tmp = g_curr_node;
+	printk("find_place_at_beginning block, actually on %p\n", node_tmp);
+	while (node_tmp->prev) {
+		printk("Reversing linked list : Actually on %p, going on %p\n", node_tmp, node_tmp->prev);
+		node_tmp = node_tmp->prev;
+	}
+	printk("Current pointer is %p\n", node_tmp);
+	while (node_tmp->next) {
+		if (node_tmp->is_busy == 1 && node_tmp->size > size_looked) {
+			return node_tmp;
+		}
+		node_tmp = node_tmp->next;
+	}
+	return 0;
+}
+
 void	*malloc(size_t size) {
 	t_alloc *return_node_ptr = 0;
+	t_alloc *tmp_g_curr_node;
 
 	printk("-------REQUESTING NEW MALLOC OF SIZE %lu---------\n", size);
 	if (size == 0)
@@ -119,9 +139,9 @@ void	*malloc(size_t size) {
 	}
 	if (g_curr_node->is_busy == 2) {
 		printk("Creating new node cause g_curr_node is set as locked\n");
-		create_link_new_node(size);
+		if (!(tmp_g_curr_node = find_place_at_beginning(size + sizeof(t_alloc))))
+			create_link_new_node(size);
 		printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", size + sizeof(t_alloc), size, sizeof(t_alloc), g_curr_node, g_curr_node->size);
-		//We need to split the block from other blocks
 		printk("Should split ? g_curr_node size %lu - %lu = %lu > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size + sizeof(t_alloc), g_curr_node->size - (size + sizeof(t_alloc)), (g_curr_node->size - (size + sizeof(t_alloc)) > 0) ? "YES" : "NO");
 		if ((int)g_curr_node->size - (int)(size + sizeof(t_alloc)) > 0) {
 			return_node_ptr = g_curr_node;
@@ -133,7 +153,8 @@ void	*malloc(size_t size) {
 		}
 	} else if (size + sizeof(t_alloc) > g_curr_node->size) {
 		printk("Size (%lu) > g_curr_node->size (%lu)\n", size + sizeof(t_alloc), g_curr_node->size);
-		create_link_new_node(size);
+		if (!find_place_at_beginning(size + sizeof(t_alloc)))
+			create_link_new_node(size);
 		return_node_ptr = g_curr_node;
 		//printk("Node %p is marqued as busy (2)\n", g_curr_node);
 		//g_curr_node->is_busy = 2;
@@ -215,7 +236,7 @@ void	*realloc(void *ptr, size_t size) {
 	//(void)size;
 }
 
-void	*calloc(size_t nitems, size_t size) {
+/*void	*calloc(size_t nitems, size_t size) {
 	void	*ptr;
 
 	printk("---REQUEST CALLOC-----\n");
@@ -225,4 +246,4 @@ void	*calloc(size_t nitems, size_t size) {
 	ft_bzero(ptr, size);
 	printk("----END CALLOC----\n");
 	return (ptr);
-}
+}*/
