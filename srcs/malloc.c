@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/23 22:46:28 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/24 12:18:06 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,13 +39,15 @@ size_t roundUpDiff(void *a, size_t b) {
 t_alloc *init_node(size_t size_requested) {
 	t_alloc *node;
 
-	printk("Creating NEW node: %lu bytes long (%lu + %lu + %lu) <- sizeof(t_alloc)\n", size_requested + sizeof(t_alloc), size_requested, sizeof(t_alloc), roundUpDiff((char *)size_requested + sizeof(t_alloc), 16));
-	size_requested += sizeof(t_alloc) + roundUpDiff((char *)size_requested + sizeof(t_alloc), 16);
+	printk("Creating NEW node: %lu bytes long (%lu + %lu) <- sizeof(t_alloc)\n", size_requested + sizeof(t_alloc), size_requested, sizeof(t_alloc));
+	size_requested += sizeof(t_alloc);
 	size_requested = (size_requested / PAGESIZE + 1) * PAGESIZE;
 	printk("Creating NEW node: %lu bytes long\n", size_requested);
 	node = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	if (!node || node == MAP_FAILED)
+	if (!node || node == MAP_FAILED) {
 		printk("Map failed\n");
+		return 0;
+	}
 	printk("Node begin at %p and end at %p\n", node, (t_alloc *)((char *)node + size_requested));
 	curr_block_start = node;
 	curr_block_end = (t_alloc *)((char *)node + size_requested);
@@ -167,6 +169,7 @@ void	*malloc(size_t size) {
 			g_curr_node = tmp_g_curr_node;
 		}
 		printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16), size, sizeof(t_alloc), g_curr_node, g_curr_node->size);
+
 		printk("Should split ? g_curr_node size %lu - %lu = %d > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16), (int)g_curr_node->size - ((int)size + (int)sizeof(t_alloc) + (int)roundUpDiff((char *)size + sizeof(t_alloc), 16)), ((int)g_curr_node->size - (int)(size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16)) > 0) ? "YES" : "NO");
 		if ((int)g_curr_node->size - (int)(size + sizeof(t_alloc)) > 0) {
 			return_node_ptr = g_curr_node;
