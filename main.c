@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 14:36:09 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/21 14:51:44 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/22 15:45:44 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ int main(void) {
 	int i = 1;
 	int j = 0;
 
-	while (i != 10000) {
+	while (i != 100000) {
 		str = malloc(i + 1);
 		printk("I = %d, donc j = %d. Pointer received is %p\n", i, i - 1, str);
 		while (j != i) {
