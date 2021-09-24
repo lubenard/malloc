@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/24 12:18:06 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/24 15:47:42 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,18 +102,15 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	size_t old_size_block = node->size;
 
 	//new_node = (t_alloc *)((char*) node + sizeof(t_alloc) + size_of_block + 1);
-	printk("Round up return %lu, and converted into addr it is %p, input is %p, test addr is %p\n", roundUp(((char *) node + sizeof(t_alloc) + size_of_block + 1), 16), roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16), ((char*) node + sizeof(t_alloc) + size_of_block + 1),node + sizeof(t_alloc) + size_of_block + 1);
+	//printk("Round up return %lu, and converted into addr it is %p, input is %p, test addr is %p\n", roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16), roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16), ((char*) node + sizeof(t_alloc) + size_of_block + 1),node + sizeof(t_alloc) + size_of_block + 1);
 
 	new_node = (t_alloc *)((char*) node + sizeof(t_alloc) + size_of_block + 1 + roundUpDiff(((char *)(node + sizeof(t_alloc) + size_of_block + 1)), 16));
 
-	printk("Splitting at addr %p, computed this way : %p + %lu + %zu + %zu + 1 = %p\n", new_node, node, sizeof(t_alloc), size_of_block, roundUpDiff(((char *)node + sizeof(t_alloc) + 1), 16), ((char*) node + sizeof(t_alloc) + size_of_block + 1 + roundUpDiff(((char *)(node + sizeof(t_alloc) + 1)), 16)));
+	printk("Splitting at addr %p, computed this way : %p + %lu + %zu + %zu + 1 = %p\n", new_node, node, sizeof(t_alloc), size_of_block, roundUpDiff(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16), ((char*) node + sizeof(t_alloc) + size_of_block + 1 + roundUpDiff(((char *)(node + sizeof(t_alloc) + size_of_block + 1)), 16)));
 
-	//printk("roundUpDiff return %lu for input %p\n", roundUpDiff(((char *)node + sizeof(t_alloc) + 1), 16), ((char*) node + sizeof(t_alloc) + size_of_block + 1));
-	printk("roundUpDiff return %lu for input %p\n", roundUpDiff(((char *)node + sizeof(t_alloc) + 1), 16), new_node);
-
-	node->size = sizeof(t_alloc) + size_of_block + roundUpDiff(new_node, 16);
+	node->size = sizeof(t_alloc) + roundUpDiff(((char *)(node + sizeof(t_alloc) + 1)), 16) + size_of_block;
 	new_node->size = old_size_block - node->size;
-	printk("Node->size is %lu, and new_node->size = %lu\n", node->size, new_node->size);
+	printk("Node->size (%p) is %lu, and new_node->size (%p) = %lu\n", node, node->size, new_node, new_node->size);
 	printk("Node %p is marqued as not available\n", node);
 	node->is_busy = 2;
 	new_node->is_busy = 1;
@@ -162,15 +159,22 @@ void	*malloc(size_t size) {
 	}
 	if (g_curr_node->is_busy == 2) {
 		printk("Creating new node cause g_curr_node is set as locked\n");
+		//TODO: remove this function by concatenating nodes.
+		// This function search for available nodes from the beginning of linked list
 		if (!(tmp_g_curr_node = find_place_at_beginning(size + sizeof(t_alloc))))
 			create_link_new_node(size);
 		else {
 			tmp2_g_curr_node = g_curr_node;
 			g_curr_node = tmp_g_curr_node;
 		}
-		printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16), size, sizeof(t_alloc), g_curr_node, g_curr_node->size);
 
-		printk("Should split ? g_curr_node size %lu - %lu = %d > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16), (int)g_curr_node->size - ((int)size + (int)sizeof(t_alloc) + (int)roundUpDiff((char *)size + sizeof(t_alloc), 16)), ((int)g_curr_node->size - (int)(size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16)) > 0) ? "YES" : "NO");
+		size_t tmp_value = sizeof(t_alloc) + roundUpDiff((char *)g_curr_node + sizeof(t_alloc) + 1, 16) + size;
+
+		printk("(g_curr_node set locked) Found space for %lu (%lu + %lu + %lu) in block at %p (%lu bytes available)\n", tmp_value, size, sizeof(t_alloc), roundUpDiff((char *)g_curr_node + sizeof(t_alloc) + 1, 16), g_curr_node, g_curr_node->size);
+
+		printk("(g_curr_node set locked) Split ? g_curr_node size = %lu - %lu = %d > 0 (size_requested in malloc) = %s\n", g_curr_node->size, tmp_value, (int)g_curr_node->size - (int)tmp_value, ((int)g_curr_node->size - (int)tmp_value > 0) ? "YES" : "NO");
+
+		// Split node if needed
 		if ((int)g_curr_node->size - (int)(size + sizeof(t_alloc)) > 0) {
 			return_node_ptr = g_curr_node;
 			split_node(g_curr_node, size);
@@ -179,26 +183,37 @@ void	*malloc(size_t size) {
 			g_curr_node->is_busy = 2;
 			return_node_ptr = g_curr_node;
 		}
-	} else if (size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16) > g_curr_node->size) {
-		printk("Size (%lu) > g_curr_node->size (%lu)\n", size + sizeof(t_alloc), g_curr_node->size);
-		if (!(tmp_g_curr_node = find_place_at_beginning(size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16))))
+	} else if (sizeof(t_alloc) + roundUpDiff((char *)g_curr_node + sizeof(t_alloc) + 1, 16) + size > g_curr_node->size) {
+		size_t tmp_value = sizeof(t_alloc) + roundUpDiff((char *)g_curr_node + sizeof(t_alloc) + 1, 16) + size;
+
+		printk("Size (%lu) > g_curr_node->size (%lu)\n", tmp_value, g_curr_node->size);
+		if (!(tmp_g_curr_node = find_place_at_beginning(tmp_value)))
 			create_link_new_node(size);
 		else {
 			tmp2_g_curr_node = g_curr_node;
 			g_curr_node = tmp_g_curr_node;
 		}
 		return_node_ptr = g_curr_node;
-		//printk("Node %p is marqued as busy (2)\n", g_curr_node);
-		//g_curr_node->is_busy = 2;
-		//printk("%d - %lu = %d\n", g_curr_node->size, size + sizeof(t_alloc), g_curr_node - (size + sizeof(t_alloc)));
-		printk("Should split ? g_curr_node size %lu - %lu = %d > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16), (int)g_curr_node->size - ((int)size + (int)sizeof(t_alloc) + (int)roundUpDiff((char *)size + sizeof(t_alloc), 16)), ((int)g_curr_node->size - (int)(size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16)) > 0) ? "YES" : "NO");
-		if ((int)g_curr_node->size - (int)(size + sizeof(t_alloc) + roundUpDiff((char *)size + sizeof(t_alloc), 16)) > 0)
+
+		printk("Should split ? g_curr_node size %lu - %lu = %d > 0 (size_requested in malloc) = %s\n", g_curr_node->size, tmp_value, (int)g_curr_node->size - (int)tmp_value, ((int)g_curr_node->size - (int)tmp_value > 0) ? "YES" : "NO");
+
+		if ((int)g_curr_node->size - (int)tmp_value > 0) {
+			return_node_ptr = g_curr_node;
 			split_node(g_curr_node, size);
+		} else {
+			printk("Node %p is marqued as not available\n", g_curr_node);
+			g_curr_node->is_busy = 2;
+			return_node_ptr = g_curr_node;
+		}
+
 	} else {
-		printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", size + sizeof(t_alloc), size, sizeof(t_alloc), g_curr_node, g_curr_node->size);
-		//We need to split the block from other blocks
-		printk("Should split ? g_curr_node size %lu - %lu = %d > 0 (size_requested in malloc) = %s\n", g_curr_node->size, size + sizeof(t_alloc), (int)g_curr_node->size - ((int)size + (int)sizeof(t_alloc)), ((int)g_curr_node->size - (int)(size + sizeof(t_alloc)) > 0) ? "YES" : "NO");
-		if ((int)g_curr_node->size - (int)(size + sizeof(t_alloc)) > 0) {
+		size_t tmp_value = sizeof(t_alloc) + roundUpDiff((char *)g_curr_node + sizeof(t_alloc) + 1, 16) + size;
+
+		printk("Found space for %lu (%lu + %lu + %lu) bytes in block located at %p (%lu bytes available)\n", tmp_value, size, sizeof(t_alloc), roundUpDiff((char *)g_curr_node + sizeof(t_alloc) + 1, 16), g_curr_node, g_curr_node->size);
+
+		printk("Should split ? g_curr_node size %lu - %lu = %d > 0 (size_requested in malloc) = %s\n", g_curr_node->size, tmp_value, (int)g_curr_node->size - (int)tmp_value, ((int)g_curr_node->size - (int)tmp_value > 0) ? "YES" : "NO");
+
+		if ((int)g_curr_node->size - (int)tmp_value > 0) {
 			return_node_ptr = g_curr_node;
 			split_node(g_curr_node, size);
 		} else {
@@ -208,7 +223,7 @@ void	*malloc(size_t size) {
 		}
 	}
 	printk("Node begin at %p and end at %p\n", curr_block_start, curr_block_end);
-	printk("Returning %p from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + sizeof(t_alloc) + 1), return_node_ptr);
+	printk("Returning %p from malloc call. Original ptr is %p\n", roundUp(((char*) return_node_ptr + sizeof(t_alloc) + 1), 16), return_node_ptr);
 	//print_linked_list();
 	if (tmp2_g_curr_node) {
 		g_curr_node = tmp2_g_curr_node;
