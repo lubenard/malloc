@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/28 11:56:08 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/28 18:44:40 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,10 +56,12 @@ void	free(void *ptr) {
 	printk("Getting %p from arg\n", ptr);
 	//printk("Pointer should be at %p\n", g_curr_node->prev);
 	node_ptr = (t_alloc *)((char *) ptr - sizeof(t_alloc) - 1);
-	printk("Freeing from address %p\n", node_ptr);
-	node_ptr->is_busy = 1;
-	//merge_blocks(node_ptr);
-	//munmap(node_ptr, sizeof(t_alloc) + node_ptr->size);
+	if (node_ptr->buffer_overflow == MAGIC_NUMBER) {
+		printk("Freeing from address %p\n", node_ptr);
+		node_ptr->is_busy = 1;
+		//merge_blocks(node_ptr);
+		//munmap(node_ptr, sizeof(t_alloc) + node_ptr->size);
+	}
 	printk("----------END FREE---------------\n");
 	pthread_mutex_unlock(&g_mutex);
 }
