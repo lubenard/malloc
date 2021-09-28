@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/27 18:37:21 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/28 12:10:55 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,31 +63,12 @@ t_alloc *init_node(size_t size_requested) {
 	return node;
 }
 
-void print_linked_list() {
+short	create_link_new_node(size_t size_of_block) {
 	t_alloc *node;
 
-	node = g_curr_node;
-	while (node->prev) {
-		node = node->prev;
+	if (!(node = init_node(size_of_block))) {
+		return 0;
 	}
-
-	printk("----Start showing linked list----\n");
-	while (node) {
-		printk("---Node---%s\n", (g_curr_node == node) ? " <-- This is g_curr_node" : "");
-		printk("Node address %p\n", node);
-		printk("size is %lu\n", node->size);
-		printk("is_free %d\n", node->is_busy);
-		printk("next %p\n", node->next);
-		printk("prev %p\n", node->prev);
-		node = node->next;
-	}
-	printk("----End of linked list----\n");
-}
-
-void create_link_new_node(size_t size_of_block) {
-	t_alloc *node;
-
-	node = init_node(size_of_block);
 	// Link only if g_curr_node exist
 	if (g_curr_node) {
 		node->prev = g_curr_node;
@@ -95,6 +76,7 @@ void create_link_new_node(size_t size_of_block) {
 	}
 	g_curr_node = node;
 	printk("Placed g_curr_node @ %p\n", g_curr_node);
+	return 1;
 }
 
 void split_node(t_alloc *node, size_t size_of_block) {
@@ -107,7 +89,7 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	//new_node = (t_alloc *)((char*) node + sizeof(t_alloc) + roundUpDiff(((char *)node + sizeof(t_alloc) + 1), 16) + size_of_block + 1);
 	new_node = (t_alloc *)roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16);
 
-	printk("Splitting at addr %p, computed this way : %p + %lu + %zu + %zu + 1 (%lu) = %p\n", new_node, node, sizeof(t_alloc), size_of_block, roundUpDiff(((char *)node + sizeof(t_alloc) + 1), 16), sizeof(t_alloc) + size_of_block + 1 + roundUpDiff(((char *)node + sizeof(t_alloc) + 1), 16), ((char*) node + sizeof(t_alloc) + size_of_block + 1 + roundUpDiff(((char *)node + sizeof(t_alloc) + 1), 16)));
+	printk("Splitting at addr %p, but \n", new_node);
 
 	printk("Could we place struct @ %p, cause %p (+32) is aligned\n", roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16), ((char *)roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16) + sizeof(t_alloc) + 1));
 
@@ -159,16 +141,16 @@ void	*malloc(size_t size) {
 	if (size == 0)
 		return NULL;
 	if (!g_curr_node) {
-		create_link_new_node(size);
+		if (!create_link_new_node(size))
+			return NULL;
 		printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
 	if (g_curr_node->is_busy == 2) {
 		printk("Creating new node cause g_curr_node is set as locked\n");
-		//TODO: remove this function by concatenating nodes.
-		// This function search for available nodes from the beginning of linked list
-		if (!(tmp_g_curr_node = find_place_at_beginning(size + sizeof(t_alloc))))
-			create_link_new_node(size);
-		else {
+		if (!(tmp_g_curr_node = find_place_at_beginning(size + sizeof(t_alloc)))) {
+			if (!create_link_new_node(size))
+				return NULL;
+		} else {
 			tmp2_g_curr_node = g_curr_node;
 			g_curr_node = tmp_g_curr_node;
 		}
@@ -194,15 +176,14 @@ void	*malloc(size_t size) {
 		size_t tmp_value = sizeof(t_alloc) + size;
 
 		printk("Size (%lu) > g_curr_node->size (%lu)\n", tmp_value, g_curr_node->size);
-		if (!(tmp_g_curr_node = find_place_at_beginning(tmp_value)))
-			create_link_new_node(size);
-		else {
+		if (!(tmp_g_curr_node = find_place_at_beginning(tmp_value))) {
+			if (!create_link_new_node(size))
+				return NULL;
+		} else {
 			tmp2_g_curr_node = g_curr_node;
 			g_curr_node = tmp_g_curr_node;
 		}
 		return_node_ptr = g_curr_node;
-
-		printk("roundUpDiff find %lu\n", roundUpDiff((char *)curr_block_start + sizeof(t_alloc) + 1, 16));
 
 		printk("Split ? g_curr_node size %lu - %lu = %d > 0 = %s\n", g_curr_node->size, tmp_value, (int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc), ((int)g_curr_node->size - (int)tmp_value > 0) ? "YES" : "NO");
 
@@ -233,7 +214,6 @@ void	*malloc(size_t size) {
 	}
 	printk("Node begin at %p and end at %p\n", curr_block_start, curr_block_end);
 	printk("Returning %p from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + sizeof(t_alloc) + 1), return_node_ptr);
-	//print_linked_list();
 	if (tmp2_g_curr_node) {
 		g_curr_node = tmp2_g_curr_node;
 		tmp2_g_curr_node = 0;
@@ -242,63 +222,6 @@ void	*malloc(size_t size) {
 	pthread_mutex_unlock(&g_mutex);
 	return ((char *)return_node_ptr + sizeof(t_alloc) + 1);
 	//return (void *)roundUp(((char*) return_node_ptr + sizeof(t_alloc) + 1), 16);
-}
-
-// TODO: Rework this function
-void merge_blocks(t_alloc *node_ptr) {
-	t_alloc *node_tmp;
-	t_alloc *node_tmp_2;
-
-	node_tmp = node_ptr;
-	printk("Merge block, actually on %p\n", node_tmp);
-	while (node_tmp->prev) {
-		//printk("Reversing linked list : Actually on %p, going on %p\n", node_ptr, node_tmp->prev);
-		node_tmp = node_tmp->prev;
-	}
-	printk("Current merge pointer is %p\n", node_tmp);
-	while (node_tmp->next) {
-		if (node_tmp->is_busy == 0) {
-			break;
-		}
-		node_tmp = node_tmp->next;
-	}
-	node_tmp_2 = node_tmp;
-	node_tmp = node_tmp->next;
-	while (node_tmp->next) {
-		if (node_tmp->is_busy) {
-			node_tmp_2->size += node_tmp->size;
-			printk("Merging %p with %p, for total size of %lu\n", node_tmp_2, node_tmp, node_tmp_2->size);
-		}
-		node_tmp = node_tmp->next;
-	}
-}
-
-void	free(void *ptr) {
-	t_alloc *node_ptr;
-
-	if (ptr == 0)
-		return;
-	printk("---------REQUESTING FREE------------\n");
-	printk("Getting %p from arg\n", ptr);
-	//printk("Pointer should be at %p\n", g_curr_node->prev);
-	node_ptr = (t_alloc *)((char *) ptr - sizeof(t_alloc) - 1);
-	printk("Freeing from address %p\n", node_ptr);
-	node_ptr->is_busy = 1;
-	//merge_blocks(node_ptr);
-	//munmap(node_ptr, sizeof(t_alloc) + node_ptr->size);
-	printk("----------END FREE---------------\n");
-}
-
-void	*realloc(void *ptr, size_t size) {
-	void *ptr_realloc;
-	printk("---REQUEST REALLOC-----\n");
-
-	ptr_realloc = malloc(size);
-	if (ptr)
-		ft_memcpy(ptr_realloc, ((char *)ptr - sizeof(t_alloc) - 1), ((t_alloc *)((char*) ptr - sizeof(t_alloc) - 1))->size - sizeof(t_alloc));
-	free(ptr);
-	printk("----END REALLOC----\n");
-	return ptr_realloc;
 }
 
 /*void	*calloc(size_t nitems, size_t size) {

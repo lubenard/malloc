@@ -6,7 +6,7 @@
 #    By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/08/26 14:06:44 by lubenard          #+#    #+#              #
-#    Updated: 2021/09/16 12:25:08 by lubenard         ###   ########.fr        #
+#    Updated: 2021/09/28 11:38:23 by lubenard         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,7 +18,10 @@ NAME = libft_malloc_$(HOSTTYPE).so
 
 SRCDIR = srcs
 
-SRC_FILES_C = malloc.c
+SRC_FILES_C = malloc.c \
+			  free.c \
+			  realloc.c \
+			  show_alloc_mem.c
 
 CC = clang
 
