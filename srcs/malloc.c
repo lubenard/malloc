@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/28 18:44:49 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/29 10:14:00 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,6 +130,23 @@ t_alloc		*find_place_at_beginning(size_t size_looked) {
 	return 0;
 }
 
+t_alloc *should_split(size_t tmp_value, size_t size) {
+	t_alloc *return_node_ptr;
+
+	printk("Split ? g_curr_node size %lu - %lu = %d > 0 = %s\n", g_curr_node->size, tmp_value + sizeof(t_alloc), (int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc), ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) ? "YES" : "NO");
+	// Split node if needed
+	if ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) {
+		return_node_ptr = g_curr_node;
+		split_node(g_curr_node, size);
+	} else {
+		printk("Node %p is marqued as not available\n", g_curr_node);
+		printk("Node %p has size %lu\n", g_curr_node, g_curr_node->size);
+		g_curr_node->is_busy = 2;
+		return_node_ptr = g_curr_node;
+	}
+	return return_node_ptr;
+}
+
 void	*malloc(size_t size) {
 	pthread_mutex_lock(&g_mutex);
 	t_alloc *return_node_ptr = 0;
@@ -144,35 +161,14 @@ void	*malloc(size_t size) {
 			return NULL;
 		printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
-	if (g_curr_node->is_busy == 2) {
-		printk("Creating new node cause g_curr_node is set as locked\n");
-		if (!(tmp_g_curr_node = find_place_at_beginning(size + sizeof(t_alloc)))) {
-			if (!create_link_new_node(size))
-				return NULL;
-		} else {
-			tmp2_g_curr_node = g_curr_node;
-			g_curr_node = tmp_g_curr_node;
-		}
+	size_t tmp_value = sizeof(t_alloc) + size;
+	if (g_curr_node->is_busy == 2 || tmp_value > g_curr_node->size) {
 
-		size_t tmp_value = sizeof(t_alloc) + size;
+		if (g_curr_node->is_busy == 2)
+			printk("Creating new node cause g_curr_node is set as locked\n");
+		else
+			printk("Size (%lu) > g_curr_node->size (%lu)\n", tmp_value, g_curr_node->size);
 
-		printk("(g_curr_node set locked) Found space for %lu (%lu + %lu) in block at %p (%lu bytes available)\n", tmp_value, size, sizeof(t_alloc), g_curr_node, g_curr_node->size);
-
-		printk("(g_curr_node set locked) Split ? g_curr_node size = %lu - %lu = %d > 0 = %s\n", g_curr_node->size, tmp_value + sizeof(t_alloc), (int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc), ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) ? "YES" : "NO");
-
-		// Split node if needed
-		if ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) {
-			return_node_ptr = g_curr_node;
-			split_node(g_curr_node, size);
-		} else {
-			printk("Node %p is marqued as not available\n", g_curr_node);
-			g_curr_node->is_busy = 2;
-			return_node_ptr = g_curr_node;
-		}
-	} else if (sizeof(t_alloc) + size > g_curr_node->size) {
-		size_t tmp_value = sizeof(t_alloc) + size;
-
-		printk("Size (%lu) > g_curr_node->size (%lu)\n", tmp_value, g_curr_node->size);
 		if (!(tmp_g_curr_node = find_place_at_beginning(tmp_value))) {
 			if (!create_link_new_node(size))
 				return NULL;
@@ -180,35 +176,12 @@ void	*malloc(size_t size) {
 			tmp2_g_curr_node = g_curr_node;
 			g_curr_node = tmp_g_curr_node;
 		}
-		return_node_ptr = g_curr_node;
 
-		printk("Split ? g_curr_node size %lu - %lu = %d > 0 = %s\n", g_curr_node->size, tmp_value + sizeof(t_alloc), (int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc), ((int)g_curr_node->size - (int)tmp_value - (int) sizeof(t_alloc) > 0) ? "YES" : "NO");
-
-		if ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) {
-			return_node_ptr = g_curr_node;
-			split_node(g_curr_node, size);
-		} else {
-			printk("Node %p is marqued as not available\n", g_curr_node);
-			printk("Node %p has size %lu\n", g_curr_node, g_curr_node->size);
-			g_curr_node->is_busy = 2;
-			return_node_ptr = g_curr_node;
-		}
-
+		return_node_ptr = should_split(tmp_value, size);
 	} else {
-		size_t tmp_value = sizeof(t_alloc) + size;
+		printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", tmp_value, size, sizeof(t_alloc), g_curr_node, g_curr_node->size);
 
-		printk("Found space for %lu (%lu + %lu + %lu) bytes in block located at %p (%lu bytes available)\n", tmp_value, size, sizeof(t_alloc), roundUpDiff((char *)g_curr_node + sizeof(t_alloc) + 1, 16), g_curr_node, g_curr_node->size);
-
-		printk("Split ? g_curr_node size %lu - %lu = %d > 0 = %s\n", g_curr_node->size, tmp_value + sizeof(t_alloc), (int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc), ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) ? "YES" : "NO");
-
-		if ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) {
-			return_node_ptr = g_curr_node;
-			split_node(g_curr_node, size);
-		} else {
-			printk("Node %p is marqued as not available\n", g_curr_node);
-			g_curr_node->is_busy = 2;
-			return_node_ptr = g_curr_node;
-		}
+		return_node_ptr = should_split(tmp_value, size);
 	}
 	printk("Node begin at %p and end at %p\n", curr_block_start, curr_block_end);
 	printk("Returning %p with size %lu from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + sizeof(t_alloc) + 1), return_node_ptr->size, return_node_ptr);
