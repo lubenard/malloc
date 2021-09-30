@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/29 10:14:00 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/30 15:09:23 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ t_alloc *init_node(size_t size_requested) {
 
 	printk("Creating NEW node: %lu bytes long (%lu + %lu) <- sizeof(t_alloc)\n", size_requested + sizeof(t_alloc), size_requested, sizeof(t_alloc));
 	size_requested += sizeof(t_alloc);
-	size_requested = (size_requested / PAGESIZE + 2) * PAGESIZE;
+	size_requested = (size_requested / PAGESIZE + 1) * PAGESIZE;
 	printk("Creating NEW node: %lu bytes long\n", size_requested);
 	node = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 	if (!node || node == MAP_FAILED) {
@@ -84,11 +84,7 @@ void split_node(t_alloc *node, size_t size_of_block) {
 
 	size_t old_size_block = node->size;
 
-	printk("Round up return %lu, and converted into addr it is %p, input is %p, test addr is %p\n", roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16), roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16), ((char*) node + sizeof(t_alloc) + size_of_block + 1),node + sizeof(t_alloc) + size_of_block + 1);
-
 	new_node = (t_alloc *)roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16);
-
-	printk("Splitting at addr %p, but \n", new_node);
 
 	printk("Could we place struct @ %p, cause %p (+32) is aligned\n", roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16), ((char *)roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16) + sizeof(t_alloc) + 1));
 
@@ -97,18 +93,20 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	else
 		printk("check, pointer %p not aligned\n", ((char *)roundUp(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16) + sizeof(t_alloc)));
 
-	node->size = sizeof(t_alloc) + roundUpDiff(((char *)node + sizeof(t_alloc) + 1), 16) + size_of_block;
-	new_node->size = old_size_block - node->size - sizeof(t_alloc);
+	node->size = (size_t)new_node - (size_t)node;
+	new_node->size = old_size_block - node->size;
 	printk("New_node->size %lu - %lu - %lu = %lu\n", old_size_block, node->size, sizeof(t_alloc), new_node->size);
 	printk("Node->size (%p) is %lu, and new_node->size (%p) = %lu\n", node, node->size, new_node, new_node->size);
 	printk("Node %p is marqued as not available\n", node);
 	node->is_busy = 2;
 	new_node->is_busy = 1;
-	node->buffer_overflow = MAGIC_NUMBER;
-	printk("Node->next = %p, but new_node->next pointer is %p\n", node->next, (void*)&new_node->next);
+	new_node->buffer_overflow = MAGIC_NUMBER;
 	new_node->next = 0;
 	node->next = new_node;
 	new_node->prev = node;
+	printk("Node->next = %p, node->prev = %p\n", node->next, node->prev);
+	printk("node->buffer_overflow = %d\n", node->buffer_overflow);
+	printk("New_node->buffer_overflow = %d\n", new_node->buffer_overflow);
 	g_curr_node = new_node;
 	printk("Placed g_curr_node @ %p\n", g_curr_node);
 }
@@ -120,6 +118,10 @@ t_alloc		*find_place_at_beginning(size_t size_looked) {
 	printk("find_place_at_beginning block, actually on %p\n", node_tmp);
 	while (node_tmp->prev) {
 		//printk("Reversing linked list : Actually on %p, going on %p\n", node_tmp, node_tmp->prev);
+		if (node_tmp->prev->buffer_overflow != MAGIC_NUMBER) {
+			printk("Probably node corruption on %p\n", node_tmp->prev);
+			//return 0;
+		}
 		if (node_tmp->is_busy == 1 && node_tmp->size > size_looked) {
 			printk("(find_place_at_beginning) Found space for %lu at %p (%lu bytes available in the node)\n", size_looked, node_tmp, node_tmp->size);
 			return node_tmp;
@@ -133,7 +135,7 @@ t_alloc		*find_place_at_beginning(size_t size_looked) {
 t_alloc *should_split(size_t tmp_value, size_t size) {
 	t_alloc *return_node_ptr;
 
-	printk("Split ? g_curr_node size %lu - %lu = %d > 0 = %s\n", g_curr_node->size, tmp_value + sizeof(t_alloc), (int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc), ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) ? "YES" : "NO");
+	printk("Split ? g_curr_node size %lu - %lu = %lu > 0 = %s\n", g_curr_node->size, tmp_value + sizeof(t_alloc), (int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc), ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) ? "YES" : "NO");
 	// Split node if needed
 	if ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) {
 		return_node_ptr = g_curr_node;
@@ -161,6 +163,7 @@ void	*malloc(size_t size) {
 			return NULL;
 		printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
+	printk("g_curr_node = %p with size %lu\n", g_curr_node, g_curr_node->size);
 	size_t tmp_value = sizeof(t_alloc) + size;
 	if (g_curr_node->is_busy == 2 || tmp_value > g_curr_node->size) {
 
@@ -179,12 +182,17 @@ void	*malloc(size_t size) {
 
 		return_node_ptr = should_split(tmp_value, size);
 	} else {
-		printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", tmp_value, size, sizeof(t_alloc), g_curr_node, g_curr_node->size);
-
-		return_node_ptr = should_split(tmp_value, size);
+		if (g_curr_node->buffer_overflow == MAGIC_NUMBER) {
+			printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", tmp_value, size, sizeof(t_alloc), g_curr_node, g_curr_node->size);
+			return_node_ptr = should_split(tmp_value, size);
+		} else {
+			printk("Possibly corrupted node on %p, magic number is %d\n", g_curr_node, g_curr_node->buffer_overflow);
+			return NULL;
+		}
 	}
 	printk("Node begin at %p and end at %p\n", curr_block_start, curr_block_end);
-	printk("Returning %p with size %lu from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + sizeof(t_alloc) + 1), return_node_ptr->size, return_node_ptr);
+	printk("Node check before return : prev -> %p and next -> %p\n", return_node_ptr->prev, return_node_ptr->next);
+	printk("Returning %p with size %lu from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + sizeof(t_alloc) + 1), return_node_ptr->size - sizeof(t_alloc), return_node_ptr);
 	if (tmp2_g_curr_node) {
 		g_curr_node = tmp2_g_curr_node;
 		tmp2_g_curr_node = 0;

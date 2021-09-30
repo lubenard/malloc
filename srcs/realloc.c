@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:22:31 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/28 18:44:09 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/30 15:13:16 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../includes/malloc.h"
@@ -20,6 +20,7 @@ extern pthread_mutex_t g_mutex;
 void	*realloc(void *ptr, size_t size) {
 	void *ptr_realloc;
 	t_alloc *node_ptr;
+	size_t size_to_copy;
 
 	//pthread_mutex_lock(&g_mutex);
 	printk("---REQUEST REALLOC with new size %lu from address %p-----\n", size, ptr);
@@ -27,10 +28,14 @@ void	*realloc(void *ptr, size_t size) {
 	ptr_realloc = malloc(size);
 	node_ptr = (t_alloc *)((char *) ptr - sizeof(t_alloc) - 1);
 	if (ptr && node_ptr->buffer_overflow == MAGIC_NUMBER) {
+		if (size < node_ptr->size)
+			size_to_copy = size;
+		else
+			size_to_copy = node_ptr->size - sizeof(t_alloc);
 		printk("Received pointer %p from arg\n", ptr);
 		printk("Should copy %lu bytes, found on node %p\n", (int)node_ptr->size - (int)sizeof(t_alloc), node_ptr);
 		printk("Starting at %p and finishing on %p\n", ptr, ((char*) ptr + node_ptr->size - sizeof(t_alloc)));
-		ft_memcpy(ptr_realloc, ptr, ((t_alloc *)((char*) ptr - sizeof(t_alloc) - 1))->size - sizeof(t_alloc));
+		ft_memcpy(ptr_realloc, ptr, size_to_copy);
 	}
 	free(ptr);
 	printk("----END REALLOC----\n");
