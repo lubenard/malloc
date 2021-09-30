@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:55:29 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/28 11:44:45 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/09/30 15:54:07 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,9 @@
 
 # define PAGESIZE 4096
 # define MAGIC_NUMBER 0xABCDEF
+# define TINY 1024
+# define SMALL 2048
+# define LARGE 4096
 
 void	free(void *ptr);
 void	*malloc(size_t size);
