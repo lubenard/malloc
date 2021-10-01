@@ -6,11 +6,12 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/05/17 00:24:32 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/09 17:26:29 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/01 16:19:12 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "memlib.h"
+#include "iolib.h"
 
 void	*ft_memset(void *s, int c, size_t n)
 {
@@ -35,6 +36,7 @@ void	*ft_memcpy(void *s1, void const *s2, size_t n)
 	t2 = (char *)s2;
 	while (i != (int)n)
 	{
+		printk("Copying from pointer %p to %p\n", &t1[i], &t2[i]);
 		t1[i] = t2[i];
 		i++;
 	}

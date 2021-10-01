@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/30 15:09:23 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/01 16:29:44 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -135,7 +135,7 @@ t_alloc		*find_place_at_beginning(size_t size_looked) {
 t_alloc *should_split(size_t tmp_value, size_t size) {
 	t_alloc *return_node_ptr;
 
-	printk("Split ? g_curr_node size %lu - %lu = %lu > 0 = %s\n", g_curr_node->size, tmp_value + sizeof(t_alloc), (int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc), ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) ? "YES" : "NO");
+	printk("Split ? g_curr_node at addr (%p) size %lu - %lu = %lu > 0 = %s\n", g_curr_node, g_curr_node->size, tmp_value + sizeof(t_alloc), (int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc), ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) ? "YES" : "NO");
 	// Split node if needed
 	if ((int)g_curr_node->size - (int)tmp_value - (int)sizeof(t_alloc) > 0) {
 		return_node_ptr = g_curr_node;
@@ -164,7 +164,7 @@ void	*malloc(size_t size) {
 		printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
 	printk("g_curr_node = %p with size %lu\n", g_curr_node, g_curr_node->size);
-	size_t tmp_value = sizeof(t_alloc) + size;
+	size_t tmp_value = sizeof(t_alloc) + size + 1;
 	if (g_curr_node->is_busy == 2 || tmp_value > g_curr_node->size) {
 
 		if (g_curr_node->is_busy == 2)
@@ -190,7 +190,8 @@ void	*malloc(size_t size) {
 			return NULL;
 		}
 	}
-	printk("Node begin at %p and end at %p\n", curr_block_start, curr_block_end);
+	printk("Block begin at %p and end at %p\n", curr_block_start, curr_block_end);
+	printk("Node begin at %p and end at %p\n", return_node_ptr, ((char *)return_node_ptr + sizeof(t_alloc)));
 	printk("Node check before return : prev -> %p and next -> %p\n", return_node_ptr->prev, return_node_ptr->next);
 	printk("Returning %p with size %lu from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + sizeof(t_alloc) + 1), return_node_ptr->size - sizeof(t_alloc), return_node_ptr);
 	if (tmp2_g_curr_node) {
@@ -202,7 +203,7 @@ void	*malloc(size_t size) {
 	return ((char *)return_node_ptr + sizeof(t_alloc) + 1);
 }
 
-/*void	*calloc(size_t nitems, size_t size) {
+void	*calloc(size_t nitems, size_t size) {
 	void	*ptr;
 
 	printk("---REQUEST CALLOC-----\n");
@@ -212,4 +213,4 @@ void	*malloc(size_t size) {
 	ft_bzero(ptr, size);
 	printk("----END CALLOC----\n");
 	return (ptr);
-}*/
+}

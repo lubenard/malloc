@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:55:29 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/30 17:56:11 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/01 14:59:56 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@
 void	free(void *ptr);
 void	*malloc(size_t size);
 void	*realloc(void *ptr, size_t size);
-//void	*calloc(size_t nitems, size_t size);
+void	*calloc(size_t nitems, size_t size);
 void	show_alloc_mem();
 void	show_alloc_mem_ex();
 

@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:22:31 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/30 15:13:16 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/01 16:14:35 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../includes/malloc.h"
@@ -33,9 +33,10 @@ void	*realloc(void *ptr, size_t size) {
 		else
 			size_to_copy = node_ptr->size - sizeof(t_alloc);
 		printk("Received pointer %p from arg\n", ptr);
-		printk("Should copy %lu bytes, found on node %p\n", (int)node_ptr->size - (int)sizeof(t_alloc), node_ptr);
+		printk("Should copy %lu bytes, but actually copying %lu, found on node %p\n", node_ptr->size - sizeof(t_alloc), size_to_copy, node_ptr);
 		printk("Starting at %p and finishing on %p\n", ptr, ((char*) ptr + node_ptr->size - sizeof(t_alloc)));
 		ft_memcpy(ptr_realloc, ptr, size_to_copy);
+		printk("Finished copying\n");
 	}
 	free(ptr);
 	printk("----END REALLOC----\n");
