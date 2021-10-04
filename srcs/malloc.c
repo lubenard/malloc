@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/01 16:29:44 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/04 13:46:23 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,8 +149,7 @@ t_alloc *should_split(size_t tmp_value, size_t size) {
 	return return_node_ptr;
 }
 
-void	*malloc(size_t size) {
-	pthread_mutex_lock(&g_mutex);
+void	*real_malloc(size_t size) {
 	t_alloc *return_node_ptr = 0;
 	t_alloc *tmp_g_curr_node = 0;
 	t_alloc *tmp2_g_curr_node = 0;
@@ -199,18 +198,14 @@ void	*malloc(size_t size) {
 		tmp2_g_curr_node = 0;
 	}
 	printk("~~~~~~~END MALLOC~~~~~~~~~\n");
-	pthread_mutex_unlock(&g_mutex);
 	return ((char *)return_node_ptr + sizeof(t_alloc) + 1);
 }
 
-void	*calloc(size_t nitems, size_t size) {
-	void	*ptr;
+void	*malloc(size_t size) {
+	void *return_ptr;
 
-	printk("---REQUEST CALLOC-----\n");
-	size *= nitems;
-	if (!(ptr = malloc(size)))
-		return (NULL);
-	ft_bzero(ptr, size);
-	printk("----END CALLOC----\n");
-	return (ptr);
+	pthread_mutex_lock(&g_mutex);
+	return_ptr = real_malloc(size);
+	pthread_mutex_unlock(&g_mutex);
+	return return_ptr;
 }

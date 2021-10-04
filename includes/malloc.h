@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:55:29 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/01 14:59:56 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/04 13:47:11 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,5 +38,10 @@ struct s_alloc {
 } __attribute__ ((packed));
 
 typedef struct s_alloc t_alloc;
+
+
+// Internal functions
+void split_node(t_alloc *node, size_t size_of_block);
+void *real_malloc(size_t size);
 
 #endif
