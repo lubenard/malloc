@@ -95,7 +95,7 @@ void split_node(t_alloc *node, size_t size_of_block) {
 
 	node->size = (size_t)new_node - (size_t)node;
 	new_node->size = old_size_block - node->size;
-	printk("New_node->size %lu - %lu - %lu = %lu\n", old_size_block, node->size, sizeof(t_alloc), new_node->size);
+	printk("New_node->size %lu - %lu (%lu + %lu) = %lu\n", old_size_block, node->size, size_of_block, sizeof(t_alloc) ,new_node->size);
 	printk("Node->size (%p) is %lu, and new_node->size (%p) = %lu\n", node, node->size, new_node, new_node->size);
 	printk("Node %p is marqued as not available\n", node);
 	node->is_busy = 2;
@@ -192,7 +192,7 @@ void	*real_malloc(size_t size) {
 	printk("Block begin at %p and end at %p\n", curr_block_start, curr_block_end);
 	printk("Node begin at %p and end at %p\n", return_node_ptr, ((char *)return_node_ptr + sizeof(t_alloc)));
 	printk("Node check before return : prev -> %p and next -> %p\n", return_node_ptr->prev, return_node_ptr->next);
-	printk("Returning %p with size %lu from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + sizeof(t_alloc) + 1), return_node_ptr->size - sizeof(t_alloc), return_node_ptr);
+	printk("Returning %p with size %lu (real size %lu) from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + sizeof(t_alloc) + 1), return_node_ptr->size - sizeof(t_alloc),return_node_ptr->size, return_node_ptr);
 	if (tmp2_g_curr_node) {
 		g_curr_node = tmp2_g_curr_node;
 		tmp2_g_curr_node = 0;

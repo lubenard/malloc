@@ -34,13 +34,11 @@ void merge_blocks(t_alloc *node_ptr) {
 	}
 }
 
-
-void	free(void *ptr) {
+void	real_free(void *ptr) {
 	t_alloc *node_ptr;
 
 	if (ptr == 0)
 		return;
-	pthread_mutex_lock(&g_mutex);
 	printk("---------REQUESTING FREE------------\n");
 	printk("Getting %p from arg\n", ptr);
 	node_ptr = (t_alloc *)((char *) ptr - sizeof(t_alloc) - 1);
@@ -53,5 +51,10 @@ void	free(void *ptr) {
 		//munmap(node_ptr, sizeof(t_alloc) + node_ptr->size);
 	}
 	printk("----------END FREE---------------\n");
+}
+
+void free(void *ptr) {
+	pthread_mutex_lock(&g_mutex);
+	real_free(ptr);
 	pthread_mutex_unlock(&g_mutex);
 }

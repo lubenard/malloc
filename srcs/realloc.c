@@ -19,51 +19,39 @@ extern t_alloc *g_curr_node;
 // Debug
 #include "../debug_lib/srcs/iolib.h"
 
+void merge_node(t_alloc *start_node, t_alloc *end_node) {
+	printk("Merging %p with %p\n", start_node, end_node);
+	printk("Old size of start_node is %lu, and end_node is %lu\n", start_node->size, end_node->size);
+	start_node->size += end_node->size;
+	printk("New size of start_node is %lu\n", start_node->size);
+	start_node->next = end_node->next;
+}
 
-void	*ft_realloc(void *ptr, size_t size) {
+void	*realloc(void *ptr, size_t size) {
 	void *ptr_realloc;
 	t_alloc *node_ptr;
 	size_t size_to_copy;
 
-	//pthread_mutex_lock(&g_mutex);
-	//printk("---REQUEST REALLOC with new size %lu from address %p-----\n", size, ptr);
-	//pthread_mutex_unlock(&g_mutex);
-	ptr_realloc = malloc(size);
-	node_ptr = (t_alloc *)((char *) ptr - sizeof(t_alloc) - 1);
-	if (ptr && node_ptr->buffer_overflow == MAGIC_NUMBER) {
-		if (size < node_ptr->size)
-			size_to_copy = size;
-		else
-			size_to_copy = node_ptr->size - sizeof(t_alloc);
-		//printk("Received pointer %p from arg\n", ptr);
-		//printk("Should copy %lu bytes, but actually copying %lu, found on node %p\n", node_ptr->size - sizeof(t_alloc), size_to_copy, node_ptr);
-		//printk("Starting at %p and finishing on %p\n", ptr, ((char*) ptr + node_ptr->size - sizeof(t_alloc)));
-		ft_memcpy(ptr_realloc, ptr, size_to_copy);
-		//printk("Finished copying\n");
-	}
-	free(ptr);
-	//printk("----END REALLOC----\n");
-	//pthread_mutex_unlock(&g_mutex);
-	return ptr_realloc;
-}
-
-void	*realloc(void *ptr, size_t size) {
-	//void *ptr_realloc;
-	t_alloc *node_ptr;
-
 	pthread_mutex_lock(&g_mutex);
+	printk("---REQUEST REALLOC with new size %lu from address %p-----\n", size, ptr);
 	if (ptr == NULL)
 		return (real_malloc(size));
-	printk("---REQUEST REALLOC with new size %lu from address %p-----\n", size, ptr);
 	node_ptr = (t_alloc *)((char *) ptr - sizeof(t_alloc) - 1);
-	if (node_ptr->next && node_ptr->next->is_busy == 1) {
-		if ((size_t)(node_ptr->size - sizeof(t_alloc)) + (size_t)(node_ptr->next - sizeof(t_alloc)) > size) {
-			printk("Splitting node in realloc at node %p with size\n", node_ptr, size);
-			split_node(node_ptr, size);
-		}
+	if (node_ptr->buffer_overflow == MAGIC_NUMBER
+		&& node_ptr->next && node_ptr->next->is_busy == 1
+		&& (size_t)(node_ptr->size - sizeof(t_alloc)) + (size_t)(node_ptr->next - sizeof(t_alloc)) > size) {
+		printk("Block at %p has %lu bytes availables and is_busy is 1\n", node_ptr->next, node_ptr->next->size - sizeof(t_alloc));
+		printk("Splitting node in realloc at node %p with size %lu\n", node_ptr, size);
+		merge_node(node_ptr, node_ptr->next);
+		split_node(node_ptr, size);
+		ptr_realloc = ptr;
+	} else {
+		size_to_copy = (size < node_ptr->size) ? size : node_ptr->size - sizeof(t_alloc);
+		ptr_realloc = malloc(size);
+		ft_memcpy(ptr_realloc, ptr, size_to_copy);
+		real_free(ptr);
 	}
 	pthread_mutex_unlock(&g_mutex);
-	printk("----END REALLOC----\n");
-	return ft_realloc(ptr, size);
+	printk("----END REALLOC, return %p----\n", ptr_realloc);
+	return ptr_realloc;
 }
-
