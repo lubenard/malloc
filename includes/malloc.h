@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:55:29 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/04 13:47:11 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/05 18:46:42 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 # define TINY 1024
 # define SMALL 2048
 # define LARGE 4096
+
 
 void	free(void *ptr);
 void	*malloc(size_t size);
@@ -39,6 +40,7 @@ struct s_alloc {
 
 typedef struct s_alloc t_alloc;
 
+# define STRUCT_SIZE sizeof(t_alloc)
 
 // Internal functions
 void	split_node(t_alloc *node, size_t size_of_block);

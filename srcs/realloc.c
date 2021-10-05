@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:22:31 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/05 18:33:00 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/05 19:29:40 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../includes/malloc.h"
@@ -19,7 +19,7 @@ extern t_alloc *g_curr_node;
 // Debug
 #include "../debug_lib/srcs/iolib.h"
 
-void merge_node(t_alloc *start_node, t_alloc *end_node) {
+void resplit_node(t_alloc *start_node, t_alloc *end_node) {
 	printk("Merging %p with %p\n", start_node, end_node);
 	printk("Old size of start_node is %lu, and end_node is %lu\n", start_node->size, end_node->size);
 	start_node->size += end_node->size;
@@ -39,19 +39,28 @@ void	*realloc(void *ptr, size_t size) {
 		pthread_mutex_unlock(&g_mutex);
 		return (real_malloc(size));
 	}
-	node_ptr = (t_alloc *)((char *) ptr - sizeof(t_alloc) - 1);
+	node_ptr = (t_alloc *)((char *) ptr - STRUCT_SIZE - 1);
 	if (node_ptr->buffer_overflow == MAGIC_NUMBER
 		&& node_ptr->next && node_ptr->next->is_busy == 1
-		&& (size_t)(node_ptr->size - sizeof(t_alloc)) + (size_t)(node_ptr->next->size - sizeof(t_alloc)) > size) {
-		printk("Compute is %lu + %lu > %lu\n", (size_t)(node_ptr->size - sizeof(t_alloc)), (size_t)(node_ptr->next->size - sizeof(t_alloc)), size);
-		printk("Block at %p has %lu bytes availables and is_busy is 1\n", node_ptr->next, node_ptr->next->size - sizeof(t_alloc));
-		printk("Block %p and %p can contain (%lu + %lu ) > %lu\n", node_ptr, node_ptr->next, node_ptr->size - sizeof(t_alloc), node_ptr->next->size - sizeof(t_alloc), size);
+		&& (size_t)(node_ptr->size - STRUCT_SIZE) + (size_t)(node_ptr->next->size - STRUCT_SIZE) > size) {
+		printk("Compute is %lu + (next) %lu > %lu\n", (size_t)(node_ptr->size - STRUCT_SIZE), (size_t)(node_ptr->next->size - STRUCT_SIZE), size);
+		printk("Block at %p has %lu bytes availables and is_busy is 1\n", node_ptr->next, node_ptr->next->size - STRUCT_SIZE);
+		printk("Block %p and %p can contain (%lu + %lu ) > %lu\n", node_ptr, node_ptr->next, node_ptr->size - STRUCT_SIZE, node_ptr->next->size - STRUCT_SIZE, size);
 		printk("Splitting node in realloc at node %p with size %lu\n", node_ptr, size);
-		merge_node(node_ptr, node_ptr->next);
+		resplit_node(node_ptr, node_ptr->next);
 		split_node(node_ptr, size);
 		ptr_realloc = ptr;
-	} else {
-		size_to_copy = (size < node_ptr->size) ? size : node_ptr->size - sizeof(t_alloc);
+	} /*else if (node_ptr->prev && node_ptr->prev->is_busy == 1
+		&& (size_t)(node_ptr->size - STRUCT_SIZE) + (size_t)(node_ptr->prev->size - STRUCT_SIZE) > size) {
+		printk("Compute is %lu + (prev) %lu > %lu\n", (size_t)(node_ptr->size - STRUCT_SIZE), (size_t)(node_ptr->prev->size - STRUCT_SIZE), size);
+		printk("Block at %p has %lu bytes availables and is_busy is 1\n", node_ptr->prev, node_ptr->prev->size - STRUCT_SIZE);
+		printk("Block %p and %p can contain (%lu + %lu ) > %lu\n", node_ptr, node_ptr->prev, node_ptr->size - STRUCT_SIZE, node_ptr->prev->size - STRUCT_SIZE, size);
+		printk("Splitting node in realloc at node %p with size %lu\n", node_ptr, size);
+		resplit_node(node_ptr->prev, node_ptr);
+		split_node(node_ptr->prev, size);
+		ptr_realloc = ((char*) node_ptr->prev + STRUCT_SIZE + 1);
+	}*/ else {
+		size_to_copy = (size < node_ptr->size) ? size : node_ptr->size - STRUCT_SIZE;
 		ptr_realloc = real_malloc(size);
 		ft_memcpy(ptr_realloc, ptr, size_to_copy);
 		real_free(ptr);

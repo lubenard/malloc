@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/09/30 17:58:07 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/05 18:54:23 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,14 +41,14 @@ void	real_free(void *ptr) {
 		return;
 	printk("---------REQUESTING FREE------------\n");
 	printk("Getting %p from arg\n", ptr);
-	node_ptr = (t_alloc *)((char *) ptr - sizeof(t_alloc) - 1);
+	node_ptr = (t_alloc *)((char *) ptr - STRUCT_SIZE - 1);
 	if (node_ptr->buffer_overflow == MAGIC_NUMBER) {
 		printk("Freeing from address %p\n", node_ptr);
 		node_ptr->is_busy = 1;
 		/*if ((node_ptr->prev && node_ptr->prev->is_busy == 1) ||
 			(node_ptr->next && node_ptr->next->is_busy == 1))
 			merge_blocks(node_ptr);*/
-		//munmap(node_ptr, sizeof(t_alloc) + node_ptr->size);
+		//munmap(node_ptr, STRUCT_SIZE + node_ptr->size);
 	}
 	printk("----------END FREE---------------\n");
 }
