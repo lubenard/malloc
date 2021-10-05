@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:22:31 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/04 14:01:02 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/05 18:33:00 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../includes/malloc.h"
@@ -34,24 +34,29 @@ void	*realloc(void *ptr, size_t size) {
 
 	pthread_mutex_lock(&g_mutex);
 	printk("---REQUEST REALLOC with new size %lu from address %p-----\n", size, ptr);
-	if (ptr == NULL)
+	if (ptr == NULL) {
+		printk("Null ptr, return real malloc\n");
+		pthread_mutex_unlock(&g_mutex);
 		return (real_malloc(size));
+	}
 	node_ptr = (t_alloc *)((char *) ptr - sizeof(t_alloc) - 1);
 	if (node_ptr->buffer_overflow == MAGIC_NUMBER
 		&& node_ptr->next && node_ptr->next->is_busy == 1
-		&& (size_t)(node_ptr->size - sizeof(t_alloc)) + (size_t)(node_ptr->next - sizeof(t_alloc)) > size) {
+		&& (size_t)(node_ptr->size - sizeof(t_alloc)) + (size_t)(node_ptr->next->size - sizeof(t_alloc)) > size) {
+		printk("Compute is %lu + %lu > %lu\n", (size_t)(node_ptr->size - sizeof(t_alloc)), (size_t)(node_ptr->next->size - sizeof(t_alloc)), size);
 		printk("Block at %p has %lu bytes availables and is_busy is 1\n", node_ptr->next, node_ptr->next->size - sizeof(t_alloc));
+		printk("Block %p and %p can contain (%lu + %lu ) > %lu\n", node_ptr, node_ptr->next, node_ptr->size - sizeof(t_alloc), node_ptr->next->size - sizeof(t_alloc), size);
 		printk("Splitting node in realloc at node %p with size %lu\n", node_ptr, size);
 		merge_node(node_ptr, node_ptr->next);
 		split_node(node_ptr, size);
 		ptr_realloc = ptr;
 	} else {
 		size_to_copy = (size < node_ptr->size) ? size : node_ptr->size - sizeof(t_alloc);
-		ptr_realloc = malloc(size);
+		ptr_realloc = real_malloc(size);
 		ft_memcpy(ptr_realloc, ptr, size_to_copy);
 		real_free(ptr);
 	}
-	pthread_mutex_unlock(&g_mutex);
 	printk("----END REALLOC, return %p----\n", ptr_realloc);
+	pthread_mutex_unlock(&g_mutex);
 	return ptr_realloc;
 }

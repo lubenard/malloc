@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/04 13:46:23 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/05 18:31:03 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,7 +95,7 @@ void split_node(t_alloc *node, size_t size_of_block) {
 
 	node->size = (size_t)new_node - (size_t)node;
 	new_node->size = old_size_block - node->size;
-	printk("New_node->size %lu - %lu (%lu + %lu) = %lu\n", old_size_block, node->size, size_of_block, sizeof(t_alloc) ,new_node->size);
+	printk("New_node->size %lu - %lu (%lu + %lu + %lu + 1) = %lu\n", old_size_block, node->size, sizeof(t_alloc), size_of_block, roundUpDiff(((char *)node + sizeof(t_alloc) + size_of_block + 1), 16), new_node->size);
 	printk("Node->size (%p) is %lu, and new_node->size (%p) = %lu\n", node, node->size, new_node, new_node->size);
 	printk("Node %p is marqued as not available\n", node);
 	node->is_busy = 2;

@@ -6,7 +6,7 @@
 #    By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/08/26 14:06:44 by lubenard          #+#    #+#              #
-#    Updated: 2021/09/28 11:38:23 by lubenard         ###   ########.fr        #
+#    Updated: 2021/10/05 18:11:14 by lubenard         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,6 +21,7 @@ SRCDIR = srcs
 SRC_FILES_C = malloc.c \
 			  free.c \
 			  realloc.c \
+			  calloc.c \
 			  show_alloc_mem.c
 
 CC = clang
