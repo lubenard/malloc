@@ -6,12 +6,13 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/05 18:54:23 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/06 17:10:44 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "malloc.h"
 #include <pthread.h>
+#include <sys/mman.h>
 extern pthread_mutex_t g_mutex;
 
 // Debug
@@ -36,6 +37,7 @@ void merge_blocks(t_alloc *node_ptr) {
 
 void	real_free(void *ptr) {
 	t_alloc *node_ptr;
+	t_bloc *bloc_node;
 
 	if (ptr == 0)
 		return;
@@ -48,7 +50,11 @@ void	real_free(void *ptr) {
 		/*if ((node_ptr->prev && node_ptr->prev->is_busy == 1) ||
 			(node_ptr->next && node_ptr->next->is_busy == 1))
 			merge_blocks(node_ptr);*/
-		//munmap(node_ptr, STRUCT_SIZE + node_ptr->size);
+		bloc_node = (t_bloc *)((char *)node_ptr - sizeof(t_bloc));
+		if (!((uintptr_t)bloc_node % 4096)) {
+			if (bloc_node->total_freed_node == bloc_node->total_node)
+				munmap(bloc_node, bloc_node->total_size);
+		}
 	}
 	printk("----------END FREE---------------\n");
 }

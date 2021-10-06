@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/05 18:54:10 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/06 17:15:12 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,23 +38,27 @@ size_t roundUpDiff(void *a, size_t b) {
 }
 
 t_alloc *init_node(size_t size_requested) {
+	t_bloc *bloc;
 	t_alloc *node;
 
 	printk("Creating NEW node: %lu bytes long (%lu + %lu) <- STRUCT_SIZE\n", size_requested + STRUCT_SIZE, size_requested, STRUCT_SIZE);
 	size_requested += STRUCT_SIZE;
 	size_requested = (size_requested / PAGESIZE + 1) * PAGESIZE;
 	printk("Creating NEW node: %lu bytes long\n", size_requested);
-	node = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	if (!node || node == MAP_FAILED) {
-		printk("Map failed\n");
+	bloc = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+	node = (t_alloc *)((char *)bloc + sizeof(t_bloc));
+	printk("Bloc is stored at %p, and node at %p (+%lu)\n", bloc, node, sizeof(t_bloc));
+	if (!bloc || bloc == MAP_FAILED) {
+		printk("/!\\mmap failed\n");
 		return 0;
 	}
 
+	bloc->total_size = size_requested;
 	printk("Node begin at %p and end at %p\n", node, (t_alloc *)((char *)node + size_requested));
 	curr_block_start = node;
 	curr_block_end = (t_alloc *)((char *)node + size_requested);
 	printk("Node pointer is %p (size - STRUCT_SIZE)\n", node);
-	node->size = size_requested;
+	node->size = size_requested - sizeof(t_bloc);
 	printk("Node->size is %lu\n", node->size);
 	node->buffer_overflow = MAGIC_NUMBER;
 	// Available: 1, Not Available: 2
@@ -154,6 +158,8 @@ void	*real_malloc(size_t size) {
 	t_alloc *tmp_g_curr_node = 0;
 	t_alloc *tmp2_g_curr_node = 0;
 
+	printk("int %d, short %d, long %d\n", sizeof(int), sizeof(short), sizeof(long));
+
 	printk("-------REQUESTING NEW MALLOC OF SIZE %lu---------\n", size);
 	if (size == 0)
 		return NULL;
@@ -197,6 +203,8 @@ void	*real_malloc(size_t size) {
 		g_curr_node = tmp2_g_curr_node;
 		tmp2_g_curr_node = 0;
 	}
+	printk("Final check before launching, is pointer aligned ? %s\n",
+			(((uintptr_t)((char *)return_node_ptr + STRUCT_SIZE + 1) % 16) == 0) ? "YES" : "NO");
 	printk("~~~~~~~END MALLOC~~~~~~~~~\n");
 	return ((char *)return_node_ptr + STRUCT_SIZE + 1);
 }
