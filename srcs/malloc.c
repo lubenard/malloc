@@ -64,6 +64,7 @@ t_alloc *init_node(size_t size_requested) {
 	// Available: 1, Not Available: 2
 	node->is_busy = 1;
 	node->next = NULL;
+	node->block = bloc;
 	node->prev = NULL;
 	return node;
 }
@@ -107,8 +108,9 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	new_node->buffer_overflow = MAGIC_NUMBER;
 	new_node->next = 0;
 	node->next = new_node;
+	new_node->block = node->block;
 	new_node->prev = node;
-	printk("Node->next = %p, node->prev = %p\n", node->next, node->prev);
+	printk("Node->next = %p\n", node->next);
 	printk("node->buffer_overflow = %d\n", node->buffer_overflow);
 	printk("New_node->buffer_overflow = %d\n", new_node->buffer_overflow);
 	g_curr_node = new_node;

@@ -30,7 +30,7 @@ void	show_alloc_mem();
 void	show_alloc_mem_ex();
 
 struct s_bloc {
-	long				buffer_overflow;
+	long			buffer_overflow;
 	short			total_node;
 	short			total_freed_node;
 	int				total_size;
@@ -46,6 +46,7 @@ struct s_alloc {
 	size_t	size;
 	short	is_busy;
 	struct	s_alloc *next;
+	struct	s_bloc *block;
 	struct	s_alloc *prev;
 }			__attribute__ ((packed));
 

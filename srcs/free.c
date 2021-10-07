@@ -47,13 +47,17 @@ void	real_free(void *ptr) {
 	if (node_ptr->buffer_overflow == MAGIC_NUMBER) {
 		printk("Freeing from address %p\n", node_ptr);
 		node_ptr->is_busy = 1;
+		node_ptr->block->total_freed_node++;
 		/*if ((node_ptr->prev && node_ptr->prev->is_busy == 1) ||
 			(node_ptr->next && node_ptr->next->is_busy == 1))
 			merge_blocks(node_ptr);*/
-		bloc_node = (t_bloc *)((char *)node_ptr - sizeof(t_bloc));
+		/*bloc_node = (t_bloc *)((char *)node_ptr - sizeof(t_bloc));
 		if (!((uintptr_t)bloc_node % 4096)) {
 			if (bloc_node->total_freed_node == bloc_node->total_node)
 				munmap(bloc_node, bloc_node->total_size);
+		}*/
+		if (node_ptr->block->total_node == node_ptr->block->total_freed_node) {
+			munmap(node_ptr->block, node_ptr->block->total_size);
 		}
 	}
 	printk("----------END FREE---------------\n");
