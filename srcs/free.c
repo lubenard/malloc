@@ -35,9 +35,40 @@ void merge_blocks(t_alloc *node_ptr) {
 	}
 }
 
+int		get_block_count(t_bloc *block) {
+	t_bloc *tmp_block;
+	int i = 1;
+
+	tmp_block = block;
+	if (block->prev != NULL) {
+		while (tmp_block->prev) {
+			i++;
+			tmp_block = tmp_block->prev;
+		}
+	}
+
+	if (block->next != NULL) {
+		tmp_block = block;
+		while (tmp_block->next) {
+			i++;
+			tmp_block = tmp_block->next;
+		}
+	}
+	return i;
+}
+
+void reorganize_pointer(t_alloc *node) {
+	t_bloc  *cur_block;
+	//t_alloc *first_alloc_of_bloc;
+
+	cur_block = node->block;
+	cur_block->next->prev = cur_block->prev;
+	cur_block->prev->next = cur_block->next;
+	//first_alloc_of_bloc = (t_alloc *)((char *)cur_block + sizeof(t_bloc) + 1);
+}
+
 void	real_free(void *ptr) {
 	t_alloc *node_ptr;
-	t_bloc *bloc_node;
 
 	if (ptr == 0)
 		return;
@@ -56,8 +87,11 @@ void	real_free(void *ptr) {
 			if (bloc_node->total_freed_node == bloc_node->total_node)
 				munmap(bloc_node, bloc_node->total_size);
 		}*/
-		if (node_ptr->block->total_node == node_ptr->block->total_freed_node) {
-			munmap(node_ptr->block, node_ptr->block->total_size);
+		//printk("get_block_count return %d\n", get_block_count(node_ptr->block));
+		if (/*get_block_count(node_ptr->block) > 1 && */node_ptr->block->total_node == node_ptr->block->total_freed_node) {
+			printk("Should launch munmap for block %p and size %lu\n", node_ptr->block, node_ptr->block->total_size);
+			//reorganize_pointer(node_ptr);
+			//munmap(node_ptr->block, node_ptr->block->total_size);
 		}
 	}
 	printk("----------END FREE---------------\n");

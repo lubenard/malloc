@@ -60,7 +60,7 @@ void	*realloc(void *ptr, size_t size) {
 		split_node(node_ptr->prev, size);
 		ptr_realloc = ((char*) node_ptr->prev + STRUCT_SIZE + 1);
 	}*/ else {
-		size_to_copy = (size < node_ptr->size) ? size : node_ptr->size - STRUCT_SIZE;
+		size_to_copy = ((int)size < node_ptr->size) ? size : node_ptr->size - STRUCT_SIZE;
 		ptr_realloc = real_malloc(size);
 		ft_memcpy(ptr_realloc, ptr, size_to_copy);
 		real_free(ptr);

@@ -25,8 +25,8 @@ pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 #include "../debug_lib/srcs/iolib.h"
 #include "../debug_lib/srcs/strlib.h"
 
-t_alloc *curr_block_start;
-t_alloc *curr_block_end;
+t_bloc *curr_block_start;
+t_bloc *curr_block_end;
 
 // END DEBUG ONLY
 size_t roundUp(void *a, size_t b) {
@@ -46,7 +46,7 @@ t_alloc *init_node(size_t size_requested) {
 	size_requested = (size_requested / PAGESIZE + 1) * PAGESIZE;
 	printk("Creating NEW node: %lu bytes long\n", size_requested);
 	bloc = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	node = (t_alloc *)((char *)bloc + sizeof(t_bloc));
+	node = (t_alloc *)((char *)bloc + sizeof(t_bloc) + 1);
 	printk("Bloc is stored at %p, and node at %p (+%lu)\n", bloc, node, sizeof(t_bloc));
 	if (!bloc || bloc == MAP_FAILED) {
 		printk("/!\\mmap failed\n");
@@ -55,8 +55,8 @@ t_alloc *init_node(size_t size_requested) {
 
 	bloc->total_size = size_requested;
 	printk("Node begin at %p and end at %p\n", node, (t_alloc *)((char *)node + size_requested));
-	curr_block_start = node;
-	curr_block_end = (t_alloc *)((char *)node + size_requested);
+	curr_block_start = bloc;
+	curr_block_end = (t_bloc *)((char *)bloc + size_requested);
 	printk("Node pointer is %p (size - STRUCT_SIZE)\n", node);
 	node->size = size_requested - sizeof(t_bloc);
 	printk("Node->size is %lu\n", node->size);
@@ -64,8 +64,11 @@ t_alloc *init_node(size_t size_requested) {
 	// Available: 1, Not Available: 2
 	node->is_busy = 1;
 	node->next = NULL;
+	printk("node->block point on %p\n", bloc);
 	node->block = bloc;
 	node->prev = NULL;
+	bloc->next = NULL;
+	bloc->prev = (g_curr_node) ? g_curr_node->block : NULL;
 	return node;
 }
 
@@ -109,6 +112,7 @@ void split_node(t_alloc *node, size_t size_of_block) {
 	new_node->next = 0;
 	node->next = new_node;
 	new_node->block = node->block;
+	printk("new_node->block = %p\n", new_node->block);
 	new_node->prev = node;
 	printk("Node->next = %p\n", node->next);
 	printk("node->buffer_overflow = %d\n", node->buffer_overflow);
@@ -128,7 +132,7 @@ t_alloc		*find_place_at_beginning(size_t size_looked) {
 			printk("Probably node corruption on %p\n", node_tmp->prev);
 			//return 0;
 		}
-		if (node_tmp->is_busy == 1 && node_tmp->size > size_looked) {
+		if (node_tmp->is_busy == 1 && node_tmp->size > (int)size_looked) {
 			printk("(find_place_at_beginning) Found space for %lu at %p (%lu bytes available in the node)\n", size_looked, node_tmp, node_tmp->size);
 			return node_tmp;
 		}
@@ -141,7 +145,7 @@ t_alloc		*find_place_at_beginning(size_t size_looked) {
 t_alloc *should_split(size_t tmp_value, size_t size) {
 	t_alloc *return_node_ptr;
 
-	printk("Split ? g_curr_node at addr (%p) size %lu - %lu = %lu > 0 = %s\n", g_curr_node, g_curr_node->size, tmp_value + STRUCT_SIZE, (int)g_curr_node->size - (int)tmp_value - (int)STRUCT_SIZE, ((int)g_curr_node->size - (int)tmp_value - (int)STRUCT_SIZE > 0) ? "YES" : "NO");
+	printk("Split ? g_curr_node at addr (%p) size %lu - %lu = %d > 0 = %s\n", g_curr_node, g_curr_node->size, tmp_value + STRUCT_SIZE, (int)g_curr_node->size - (int)tmp_value - (int)STRUCT_SIZE, ((int)g_curr_node->size - (int)tmp_value - (int)STRUCT_SIZE > 0) ? "YES" : "NO");
 	// Split node if needed
 	if ((int)g_curr_node->size - (int)tmp_value - (int)STRUCT_SIZE > 0) {
 		return_node_ptr = g_curr_node;
@@ -160,7 +164,7 @@ void	*real_malloc(size_t size) {
 	t_alloc *tmp_g_curr_node = 0;
 	t_alloc *tmp2_g_curr_node = 0;
 
-	printk("int %d, short %d, long %d\n", sizeof(int), sizeof(short), sizeof(long));
+	printk("int %d, short %d, long %d, size_t %d\n", sizeof(int), sizeof(short), sizeof(long), sizeof(size_t));
 
 	printk("-------REQUESTING NEW MALLOC OF SIZE %lu---------\n", size);
 	if (size == 0)
@@ -171,7 +175,7 @@ void	*real_malloc(size_t size) {
 		printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
 	printk("g_curr_node = %p with size %lu\n", g_curr_node, g_curr_node->size);
-	size_t tmp_value = STRUCT_SIZE + size + 1;
+	int tmp_value = STRUCT_SIZE + size + 1;
 	if (g_curr_node->is_busy == 2 || tmp_value > g_curr_node->size) {
 
 		if (g_curr_node->is_busy == 2)
@@ -197,16 +201,19 @@ void	*real_malloc(size_t size) {
 			return NULL;
 		}
 	}
+	return_node_ptr->block->total_node++;
+	printk("Size of t_alloc is %lu and size of t_bloc is %lu\n", sizeof(t_alloc), sizeof(t_bloc));
+	printk("Final check before launching, is pointer aligned ? %s\n",
+			(((uintptr_t)((char *)return_node_ptr + STRUCT_SIZE + 1) % 16) == 0) ? "YES" : "NO");
 	printk("Block begin at %p and end at %p\n", curr_block_start, curr_block_end);
 	printk("Node begin at %p and end at %p\n", return_node_ptr, ((char *)return_node_ptr + STRUCT_SIZE));
 	printk("Node check before return : prev -> %p and next -> %p\n", return_node_ptr->prev, return_node_ptr->next);
-	printk("Returning %p with size %lu (real size %lu) from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + STRUCT_SIZE + 1), return_node_ptr->size - STRUCT_SIZE,return_node_ptr->size, return_node_ptr);
+	printk("Alloc start at %p and end at %p. Diff between them is %lu\n", ((char *)return_node_ptr + STRUCT_SIZE + 1), ((char *)return_node_ptr + return_node_ptr->size));
+	printk("Returning %p with size %lu (real size %lu) from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + STRUCT_SIZE + 1), return_node_ptr->size - STRUCT_SIZE, return_node_ptr->size, return_node_ptr);
 	if (tmp2_g_curr_node) {
 		g_curr_node = tmp2_g_curr_node;
 		tmp2_g_curr_node = 0;
 	}
-	printk("Final check before launching, is pointer aligned ? %s\n",
-			(((uintptr_t)((char *)return_node_ptr + STRUCT_SIZE + 1) % 16) == 0) ? "YES" : "NO");
 	printk("~~~~~~~END MALLOC~~~~~~~~~\n");
 	return ((char *)return_node_ptr + STRUCT_SIZE + 1);
 }

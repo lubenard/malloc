@@ -17,7 +17,7 @@
 # include <stdint.h>
 
 # define PAGESIZE 4096
-# define MAGIC_NUMBER 0xABCDEF
+# define MAGIC_NUMBER 0x7A12
 # define TINY 1024
 # define SMALL 2048
 # define LARGE 4096
@@ -30,7 +30,9 @@ void	show_alloc_mem();
 void	show_alloc_mem_ex();
 
 struct s_bloc {
-	long			buffer_overflow;
+	int				buffer_overflow;
+	short			padding;
+	char			padding2;
 	short			total_node;
 	short			total_freed_node;
 	int				total_size;
@@ -41,13 +43,12 @@ struct s_bloc {
 typedef struct s_bloc t_bloc;
 
 struct s_alloc {
-	int		buffer_overflow;
-	char	second_buffer;
-	size_t	size;
-	short	is_busy;
+	short	buffer_overflow;
+	int		size;
+	char	is_busy;
 	struct	s_alloc *next;
-	struct	s_bloc *block;
 	struct	s_alloc *prev;
+	struct	s_bloc *block;
 }			__attribute__ ((packed));
 
 typedef struct s_alloc t_alloc;

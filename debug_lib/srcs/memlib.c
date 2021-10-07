@@ -36,7 +36,7 @@ void	*ft_memcpy(void *s1, void const *s2, size_t n)
 	t2 = (char *)s2;
 	while (i != (int)n)
 	{
-		printk("Copying from pointer %p to %p\n", &t1[i], &t2[i]);
+		//printk("Copying from pointer %p to %p\n", &t1[i], &t2[i]);
 		t1[i] = t2[i];
 		i++;
 	}
