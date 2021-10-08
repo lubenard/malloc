@@ -31,8 +31,8 @@ void	show_alloc_mem_ex();
 
 struct s_bloc {
 	int				buffer_overflow;
-	short			padding;
-	char			padding2;
+	short			paddin;
+	char			is_full;
 	short			total_node;
 	short			total_freed_node;
 	int				total_size;
