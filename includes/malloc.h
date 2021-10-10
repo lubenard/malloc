@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:55:29 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/06 17:15:35 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/10 16:27:27 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,9 +31,8 @@ void	show_alloc_mem_ex();
 
 struct s_bloc {
 	int				buffer_overflow;
-	short			paddin;
 	char			is_full;
-	short			total_node;
+	int				total_node;
 	short			total_freed_node;
 	int				total_size;
 	struct s_bloc	*next;

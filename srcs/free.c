@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/06 17:10:44 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/10 20:52:54 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,15 +63,10 @@ void reorganize_pointer(t_bloc *node) {
 	t_alloc *last_alloc_of_bloc;
 	int i;
 
-	i = 1;
+	i = 0;
 	cur_block = node;
 	printk("Curr_block is %p, next is %p, prev is %p\n", cur_block, cur_block->next, cur_block->prev);
-	/*if (cur_block->next)
-		cur_block->next->prev = cur_block->prev;
-	if (cur_block->prev)
-		cur_block->prev->next = cur_block->next;*/
-	//printk("Redir made, is %p, next is %p, prev is %p\n", cur_block, cur_block->next, cur_block->prev);
-	first_alloc_of_bloc = (t_alloc *)((char *)cur_block + sizeof(t_bloc) + 1);
+		first_alloc_of_bloc = (t_alloc *)((char *)cur_block + sizeof(t_bloc) + 1);
 
 	printk("first_alloc_of_bloc is %p, next is %p, prev is %p\n", first_alloc_of_bloc, first_alloc_of_bloc->next, first_alloc_of_bloc->prev);
 
@@ -85,17 +80,30 @@ void reorganize_pointer(t_bloc *node) {
 	printk("%d / %d freed\n",cur_block->total_freed_node, cur_block->total_node);
 	last_alloc_of_bloc = first_alloc_of_bloc;
 	while (i < cur_block->total_node) {
-		//printk("%d / %d : last_alloc_of_bloc is %p (with size %lu), next is %p\n",i, cur_block->total_node, last_alloc_of_bloc, last_alloc_of_bloc->size, last_alloc_of_bloc->next);
+		printk("%d / %d : last_alloc_of_bloc is %p (with size %lu), prev is %p, next is %p\n",i, cur_block->total_node, last_alloc_of_bloc, last_alloc_of_bloc->size, last_alloc_of_bloc->prev, last_alloc_of_bloc->next);
 		last_alloc_of_bloc = last_alloc_of_bloc->next;
 		i++;
 	}
 
-	//printk("last_alloc_of_bloc is %p, next is %p, prev is %p\n", last_alloc_of_bloc, last_alloc_of_bloc->next, last_alloc_of_bloc->prev);
+	printk("last_alloc_of_bloc is %p, next is %p, prev is %p\n", last_alloc_of_bloc, last_alloc_of_bloc->next, last_alloc_of_bloc->prev);
 
-	//if (first_alloc_of_bloc->prev)
-	//	first_alloc_of_bloc->prev->next = last_alloc_of_bloc->next;
-	//if (last_alloc_of_bloc->next)
-	//	last_alloc_of_bloc->next->prev = first_alloc_of_bloc->prev;
+	if (first_alloc_of_bloc->prev) {
+		first_alloc_of_bloc->prev->next = last_alloc_of_bloc->next;
+		printk("Redir made 2, %p now point on %p, was pointing on %p\n", first_alloc_of_bloc->prev, last_alloc_of_bloc->next, first_alloc_of_bloc);
+	}
+	if (last_alloc_of_bloc->next) {
+		last_alloc_of_bloc->next->prev = first_alloc_of_bloc->prev;
+		printk("Redir made 2, %p now point on %p, was pointing on %p\n", last_alloc_of_bloc->next, first_alloc_of_bloc->prev, last_alloc_of_bloc);
+	}
+
+	if (cur_block->prev) {
+		cur_block->prev->next = cur_block->next;
+		printk("Block redir made, %p now point on %p, was pointing on %p\n", cur_block->prev, cur_block->next, cur_block);
+	}
+	if (cur_block->next) {
+		cur_block->next->prev = cur_block->prev;
+		printk("Block redir made, %p now point on %p, was pointing on %p\n", cur_block->next, cur_block->prev, cur_block);
+	}
 
 }
 
@@ -113,10 +121,11 @@ void	check_block_to_free(t_alloc *alloc) {
 			if (block_tmp->total_freed_node == block_tmp->total_node) {
 				printk("Should launch munmap for block %p and size %lu\n", block_tmp, block_tmp->total_size);
 				reorganize_pointer(block_tmp);
-				//munmap(block_tmp, block_tmp->total_size);
+				printk("Munmap for bloc %p and size %d\n", block_tmp, block_tmp->total_size);
+				munmap(block_tmp, block_tmp->total_size);
 				return;
-			} else
-				printk("check_block_to_free node %p : %d/%d freed\n", block_tmp, block_tmp->total_freed_node, block_tmp->total_node);
+			} //else
+				//printk("check_block_to_free node %p : %d/%d freed\n", block_tmp, block_tmp->total_freed_node, block_tmp->total_node);
 			block_tmp = block_tmp->prev;
 		}
 	}
@@ -139,15 +148,10 @@ void	real_free(void *ptr) {
 		/*if ((node_ptr->prev && node_ptr->prev->is_busy == 1) ||
 			(node_ptr->next && node_ptr->next->is_busy == 1))
 			merge_blocks(node_ptr);*/
-		/*bloc_node = (t_bloc *)((char *)node_ptr - sizeof(t_bloc));
-		if (!((uintptr_t)bloc_node % 4096)) {
-			if (bloc_node->total_freed_node == bloc_node->total_node)
-				munmap(bloc_node, bloc_node->total_size);
-		}*/
 		if (node_ptr->block->total_node == 0)
 			node_ptr->block->total_node = 1;
 		printk("get_block_count return %d\n", get_block_count(node_ptr->block));
-		if (get_block_count(node_ptr->block) > 1 /* && node_ptr->block->total_node == node_ptr->block->total_freed_node*/) {
+		if (get_block_count(node_ptr->block) > 1) {
 			check_block_to_free(node_ptr);
 			////printk("Should launch munmap for block %p and size %lu\n", node_ptr->block, node_ptr->block->total_size);
 		}
