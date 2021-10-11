@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/04 13:38:02 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/04 13:50:24 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/11 21:08:53 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,9 +25,9 @@ void	*calloc(size_t nitems, size_t size) {
 	pthread_mutex_lock(&g_mutex);
 	printk("---REQUEST CALLOC with size %lu-----\n", size * nitems);
 	size *= nitems;
-	if (!(ptr = real_malloc(size)))
+	if (!(ptr = real_malloc(size + 1)))
 		return (NULL);
-	ft_bzero(ptr, size);
+	ft_bzero(ptr, size + 1);
 	printk("----END CALLOC----\n");
 	pthread_mutex_unlock(&g_mutex);
 	return (ptr);

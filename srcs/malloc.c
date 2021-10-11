@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/11 15:53:14 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/11 21:11:17 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ t_alloc *init_node(size_t size_requested) {
 	t_alloc *node;
 
 	printk("Creating NEW node: %lu bytes long (%lu + %lu) <- STRUCT_SIZE\n", size_requested + STRUCT_SIZE, size_requested, STRUCT_SIZE);
-	size_requested += STRUCT_SIZE + sizeof(t_bloc) + 2;
+	size_requested += STRUCT_SIZE + sizeof(t_bloc);
 	size_requested = (size_requested / PAGESIZE + 1) * PAGESIZE;
 	printk("Creating NEW node: %lu bytes long\n", size_requested);
 	bloc = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
