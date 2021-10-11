@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/11 00:27:12 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/11 02:14:14 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ t_alloc *init_node(size_t size_requested) {
 	printk("Creating NEW node: %lu bytes long\n", size_requested);
 	bloc = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 	node = (t_alloc *)((char *)bloc + sizeof(t_bloc) + 1);
-	printk("Bloc is stored at %p, and node at %p (+%lu + 1)\n", bloc, node, sizeof(t_bloc) + 1);
+	printk("Bloc is stored at %p, and node at %p (+%lu + 1)\n", bloc, node, sizeof(t_bloc));
 	if (!bloc || bloc == MAP_FAILED) {
 		//printk("/!\\mmap failed\n");
 		return 0;
@@ -60,7 +60,7 @@ t_alloc *init_node(size_t size_requested) {
 	curr_block_start = bloc;
 	curr_block_end = (t_bloc *)((char *)bloc + size_requested);
 	//printk("Node pointer is %p (size - STRUCT_SIZE)\n", node);
-	node->size = size_requested - sizeof(t_bloc);
+	node->size = ((char *)bloc + bloc->total_size) - ((char*)node);
 	//printk("Node->size is %lu\n", node->size);
 	node->buffer_overflow = MAGIC_NUMBER;
 	// Available: 1, Not Available: 2
@@ -101,9 +101,6 @@ void split_node(t_alloc *node, size_t size_of_block) {
 
 	new_node = (t_alloc *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16);
 
-	if ((size_t)new_node > (size_t)((char*)node->block + node->block->total_size))
-		printk("new_size error, should return");
-
 	printk("roundUpDiff return %lu from address %p\n", roundUpDiff(((char *)node + STRUCT_SIZE + size_of_block + 1), 16), ((char *)node + STRUCT_SIZE + size_of_block + 1));
 
 	printk("Could we place struct @ %p, cause %p (+32) is aligned\n", roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16), ((char *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16) + STRUCT_SIZE + 1));
@@ -114,9 +111,10 @@ void split_node(t_alloc *node, size_t size_of_block) {
 		//printk("check, pointer %p not aligned\n", ((char *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16) + STRUCT_SIZE));
 
 	node->size = (size_t)new_node - (size_t)node - 1;
+	printk("Size of block is %lu, node begin at %p, datas start at %p, datas should end at %p, node end at %p\n", size_of_block, node, ((char *)node + STRUCT_SIZE + 1), ((char *)node + STRUCT_SIZE + size_of_block), ((char*) node + node->size));
 	//node->size = STRUCT_SIZE + size_of_block + roundUpDiff(((char *)node + STRUCT_SIZE + size_of_block + 1), 16);
 	//printk("Node %p is marqued as not available\n", node);
-	printk("node->size %lu - %lu = %lu\n", (size_t)new_node, (size_t)node, (size_t)new_node - (size_t)node - 1);
+	//printk("node->size %lu - %lu = %lu\n", (size_t)new_node, (size_t)node, (size_t)new_node - (size_t)node - 1);
 	printk("check node->size = %lu\n", node->size);
 	node->block->total_node++;
 	printk("Incrementing total node for pointer %p, bringing it to %d\n", node->block, node->block->total_node);
@@ -161,7 +159,7 @@ t_alloc		*find_place_at_beginning(size_t size_looked) {
 	node_tmp = g_curr_node;
 	printk("find_place_at_beginning block, actually on %p\n", node_tmp);
 	while (node_tmp->prev) {
-		//printk("Reversing linked list : Actually on %p, going on %p\n", node_tmp, node_tmp->prev);
+		printk("Reversing linked list : Actually on %p, going on %p\n", node_tmp, node_tmp->prev);
 		if (node_tmp->prev->buffer_overflow != MAGIC_NUMBER) {
 			//printk("Probably node corruption on %p\n", node_tmp->prev);
 			//return 0;
@@ -200,6 +198,7 @@ t_alloc *should_split(size_t tmp_value, size_t size) {
 		printk("Node %p has size %lu\n", g_curr_node, g_curr_node->size);
 		g_curr_node->is_busy = 2;
 
+		//printk("Test compute new_alloc_size = %lu\n", );
 		// This fix a weird loophole in case you allocate something you imediatelu free, and split_node return false
 		/*if (g_curr_node->block->total_freed_node == g_curr_node->block->total_node)
 				g_curr_node->block->total_freed_node--;*/
@@ -242,7 +241,7 @@ void	*real_malloc(size_t size) {
 			g_curr_node = tmp_g_curr_node;
 		}
 		return_node_ptr = should_split(tmp_value, size);
-	} else if (g_curr_node->buffer_overflow == MAGIC_NUMBER && tmp_value <= g_curr_node->size) {
+	} else if (g_curr_node->buffer_overflow == MAGIC_NUMBER) {
 		printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", tmp_value, STRUCT_SIZE, size, g_curr_node, g_curr_node->size);
 		return_node_ptr = should_split(tmp_value, size);
 	} else {
@@ -264,9 +263,8 @@ void	*real_malloc(size_t size) {
 	//printk("Final check before launching, is pointer aligned ? %s\n",
 	//		(((uintptr_t)((char *)return_node_ptr + STRUCT_SIZE + 1) % 16) == 0) ? "YES" : "NO");
 	printk("Block begin at %p and end at %p size of %lu\n", return_node_ptr->block, ((char*)return_node_ptr->block + return_node_ptr->block->total_size), return_node_ptr->block->total_size);
-	//printk("Node begin at %p and end at %p\n", return_node_ptr, ((char *)return_node_ptr + STRUCT_SIZE));
-	printk("Node check before return : prev -> %p and next -> %p, next->next is %p\n", return_node_ptr->prev, return_node_ptr->next, (return_node_ptr->next) ? return_node_ptr->next->next : 0);
-	printk("Alloc start at %p and end at %p.\n", ((char *)return_node_ptr + STRUCT_SIZE + 1), ((char *)return_node_ptr + return_node_ptr->size));
+	printk("Node check before return : prev -> %p and next -> %p\n", return_node_ptr->prev, return_node_ptr->next);
+	printk("Alloc metadata at %p, datas at %p and end at %p.\n", return_node_ptr, ((char *)return_node_ptr + STRUCT_SIZE + 1), ((char *)return_node_ptr + return_node_ptr->size));
 	printk("Returning %p with size %lu (real size %lu) from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + STRUCT_SIZE + 1), return_node_ptr->size - STRUCT_SIZE, return_node_ptr->size, return_node_ptr);
 	printk("~~~~~~~END MALLOC~~~~~~~~~\n");
 	return ((char *)return_node_ptr + STRUCT_SIZE + 1);

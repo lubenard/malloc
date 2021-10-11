@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/10 21:04:02 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/11 01:59:31 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ void reorganize_pointer(t_bloc *node) {
 
 	printk("%d / %d freed\n",cur_block->total_freed_node, cur_block->total_node);
 	last_alloc_of_bloc = first_alloc_of_bloc;
-	while (i < cur_block->total_node) {
+	while (i != cur_block->total_node) {
 		printk("%d / %d : last_alloc_of_bloc is %p (with size %lu), prev is %p, next is %p\n",i + 1, cur_block->total_node, last_alloc_of_bloc, last_alloc_of_bloc->size, last_alloc_of_bloc->prev, last_alloc_of_bloc->next);
 		last_alloc_of_bloc = last_alloc_of_bloc->next;
 		i++;
