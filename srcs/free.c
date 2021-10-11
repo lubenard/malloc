@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/11 01:59:31 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/11 15:52:18 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,7 +66,7 @@ void reorganize_pointer(t_bloc *node) {
 	i = 0;
 	cur_block = node;
 	printk("Curr_block is %p, next is %p, prev is %p\n", cur_block, cur_block->next, cur_block->prev);
-		first_alloc_of_bloc = (t_alloc *)((char *)cur_block + sizeof(t_bloc) + 1);
+	first_alloc_of_bloc = (t_alloc *)((char *)cur_block + sizeof(t_bloc) + 1);
 
 	printk("first_alloc_of_bloc is %p, next is %p, prev is %p\n", first_alloc_of_bloc, first_alloc_of_bloc->next, first_alloc_of_bloc->prev);
 
@@ -78,15 +78,8 @@ void reorganize_pointer(t_bloc *node) {
 	printk("Block is supposed to start on %p -> %p\n", cur_block, ((char *)cur_block + cur_block->total_size));
 
 	printk("%d / %d freed\n",cur_block->total_freed_node, cur_block->total_node);
-	last_alloc_of_bloc = first_alloc_of_bloc;
-	while (i != cur_block->total_node) {
-		printk("%d / %d : last_alloc_of_bloc is %p (with size %lu), prev is %p, next is %p\n",i + 1, cur_block->total_node, last_alloc_of_bloc, last_alloc_of_bloc->size, last_alloc_of_bloc->prev, last_alloc_of_bloc->next);
-		last_alloc_of_bloc = last_alloc_of_bloc->next;
-		i++;
-	}
-
+	last_alloc_of_bloc = ((t_alloc *)((char *)cur_block->next + sizeof(t_bloc) + 1))->prev;
 	printk("last_alloc_of_bloc is %p, next is %p, prev is %p\n", last_alloc_of_bloc, last_alloc_of_bloc->next, last_alloc_of_bloc->prev);
-
 	if (first_alloc_of_bloc->prev) {
 		first_alloc_of_bloc->prev->next = last_alloc_of_bloc->next;
 		printk("Redir made 2, %p now point on %p, was pointing on %p\n", first_alloc_of_bloc->prev, last_alloc_of_bloc->next, first_alloc_of_bloc);

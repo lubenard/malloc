@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/11 02:14:14 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/11 15:53:14 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ t_alloc *init_node(size_t size_requested) {
 	t_alloc *node;
 
 	printk("Creating NEW node: %lu bytes long (%lu + %lu) <- STRUCT_SIZE\n", size_requested + STRUCT_SIZE, size_requested, STRUCT_SIZE);
-	size_requested += STRUCT_SIZE + sizeof(t_bloc);
+	size_requested += STRUCT_SIZE + sizeof(t_bloc) + 2;
 	size_requested = (size_requested / PAGESIZE + 1) * PAGESIZE;
 	printk("Creating NEW node: %lu bytes long\n", size_requested);
 	bloc = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
@@ -55,12 +55,12 @@ t_alloc *init_node(size_t size_requested) {
 
 	bloc->total_node = 0;
 	bloc->total_freed_node = 0;
-	bloc->total_size = size_requested;
-	printk("Node begin at %p and end at %p\n", bloc, (t_alloc *)((char *)bloc + size_requested));
+	bloc->total_size = size_requested - 1;
+	printk("Bloc start at %p, and end at %p, but real end is %p\n", bloc, ((char *)bloc + size_requested), ((char *)bloc + bloc->total_size));
 	curr_block_start = bloc;
-	curr_block_end = (t_bloc *)((char *)bloc + size_requested);
+	curr_block_end = (t_bloc *)((char *)bloc + bloc->total_size);
 	//printk("Node pointer is %p (size - STRUCT_SIZE)\n", node);
-	node->size = ((char *)bloc + bloc->total_size) - ((char*)node);
+	node->size = bloc->total_size - sizeof(t_alloc) - 1;
 	//printk("Node->size is %lu\n", node->size);
 	node->buffer_overflow = MAGIC_NUMBER;
 	// Available: 1, Not Available: 2
@@ -159,7 +159,7 @@ t_alloc		*find_place_at_beginning(size_t size_looked) {
 	node_tmp = g_curr_node;
 	printk("find_place_at_beginning block, actually on %p\n", node_tmp);
 	while (node_tmp->prev) {
-		printk("Reversing linked list : Actually on %p, going on %p\n", node_tmp, node_tmp->prev);
+		//printk("Reversing linked list : Actually on %p, going on %p\n", node_tmp, node_tmp->prev);
 		if (node_tmp->prev->buffer_overflow != MAGIC_NUMBER) {
 			//printk("Probably node corruption on %p\n", node_tmp->prev);
 			//return 0;
@@ -198,12 +198,6 @@ t_alloc *should_split(size_t tmp_value, size_t size) {
 		printk("Node %p has size %lu\n", g_curr_node, g_curr_node->size);
 		g_curr_node->is_busy = 2;
 
-		//printk("Test compute new_alloc_size = %lu\n", );
-		// This fix a weird loophole in case you allocate something you imediatelu free, and split_node return false
-		/*if (g_curr_node->block->total_freed_node == g_curr_node->block->total_node)
-				g_curr_node->block->total_freed_node--;*/
-
-		//g_curr_node->block->total_node++;
 		return_node_ptr = g_curr_node;
 	}
 	return return_node_ptr;
