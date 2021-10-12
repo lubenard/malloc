@@ -58,7 +58,7 @@ typedef struct s_alloc t_alloc;
 # define STRUCT_SIZE sizeof(t_alloc)
 
 // Internal functions
-void	split_node(t_alloc *node, size_t size_of_block);
+t_alloc	*split_node(t_alloc *node, size_t size_of_block);
 void	*real_malloc(size_t size);
 void	real_free(void *ptr);
 
