@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/13 14:46:21 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 16:36:48 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,10 +44,10 @@ t_alloc *init_node(size_t size_requested) {
 	//printk("Creating NEW node: %lu bytes long (%lu + %lu) <- STRUCT_SIZE\n", size_requested + STRUCT_SIZE, size_requested, STRUCT_SIZE);
 	size_requested += TOTAL_STRUCT_SIZE + 1;
 	size_requested = (size_requested / PAGESIZE + 1) * PAGESIZE;
-	printk("Creating NEW node: %lu bytes long\n", size_requested);
+	//printk("Creating NEW node: %lu bytes long\n", size_requested);
 	bloc = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 	node = (t_alloc *)((char *)bloc + STRUCT_BLOCK_SIZE + 1);
-	printk("Bloc is stored at %p, and node at %p (+%lu + 1)\n", bloc, node, STRUCT_BLOCK_SIZE);
+	//printk("Bloc is stored at %p, and node at %p (+%lu + 1)\n", bloc, node, STRUCT_BLOCK_SIZE);
 	if (!bloc || bloc == MAP_FAILED) {
 		//printk("/!\\mmap failed\n");
 		return 0;
@@ -99,7 +99,7 @@ short	create_link_new_node(size_t size_of_block) {
 		g_curr_node->next = node;
 	}
 	g_curr_node = node;
-	//////printk("Placed g_curr_node @ %p\n", g_curr_node);
+	//printk("Placed g_curr_node @ %p\n", g_curr_node);
 	return 1;
 }
 
@@ -254,7 +254,7 @@ void	*real_malloc(size_t size) {
 		g_curr_node = tmp2_g_curr_node;
 		tmp2_g_curr_node = 0;
 	}
-	
+
 	//printk("before return, g_curr_node is %p\n", g_curr_node);
 	//printk("g_curr_node = %p and g_curr_node->next %p before return\n", g_curr_node, g_curr_node->next);
 	//printk("Final check before launching, is pointer aligned ? %s\n",
@@ -262,7 +262,7 @@ void	*real_malloc(size_t size) {
 	//printk("Node check before return : prev -> %p and next -> %p\n", return_node_ptr->prev, return_node_ptr->next);
 	//printk("Alloc metadata at %p, datas at %p and end at %p.\n", return_node_ptr, ((char *)return_node_ptr + STRUCT_SIZE + 1), ((char *)return_node_ptr + return_node_ptr->size));
 	//printk("Returning %p with size %lu (real size %lu) from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + STRUCT_SIZE + 1), return_node_ptr->size - STRUCT_SIZE, return_node_ptr->size, return_node_ptr);
-	printk("~~~~~~~END MALLOC~~~~~~~~~\n");
+	//printk("~~~~~~~END MALLOC~~~~~~~~~\n");
 	return ((char *)return_node_ptr + STRUCT_SIZE + 1);
 }
 
