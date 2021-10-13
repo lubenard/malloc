@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:22:31 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/13 11:00:50 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 11:23:10 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../includes/malloc.h"
@@ -42,7 +42,7 @@ void	*realloc(void *ptr, size_t size) {
 	void *ptr_realloc;
 	t_alloc *node_ptr;
 	size_t size_to_copy;
-	t_alloc *tmp_g_curr_node;
+	//t_alloc *tmp_g_curr_node;
 
 	pthread_mutex_lock(&g_mutex);
 	printk("---REQUEST REALLOC with new size %lu from address %p-----\n", size, ptr);

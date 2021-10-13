@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:55:29 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/12 01:19:03 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 11:31:26 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,6 @@
 # define LARGE 4096
 # define ALLOC_FREE 1
 # define ALLOC_USED 2
-
 
 void	free(void *ptr);
 void	*malloc(size_t size);
@@ -44,6 +43,8 @@ struct s_bloc {
 
 typedef struct s_bloc t_bloc;
 
+# define STRUCT_BLOCK_SIZE sizeof(t_bloc)
+
 struct s_alloc {
 	short	buffer_overflow;
 	int		size;
@@ -56,6 +57,8 @@ struct s_alloc {
 typedef struct s_alloc t_alloc;
 
 # define STRUCT_SIZE sizeof(t_alloc)
+
+# define TOTAL_STRUCT_SIZE STRUCT_SIZE + STRUCT_BLOCK_SIZE
 
 // Internal functions
 t_alloc	*split_node(t_alloc *node, size_t size_of_block);

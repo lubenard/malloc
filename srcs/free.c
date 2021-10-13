@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/12 03:28:58 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 11:30:36 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,23 +20,6 @@ extern t_alloc *g_curr_node;
 // Debug
 #include "../debug_lib/srcs/iolib.h"
 
-// TODO: Rework this function
-void merge_blocks(t_alloc *node_ptr) {
-	t_alloc *node_tmp;
-
-	node_tmp = node_ptr;
-	//printk("Merge block, actually on %p\n", node_tmp);
-	while (node_tmp->prev) {
-		//printk("(Bloc merge) Reversing linked list : Actually on %p, going on %p\n", node_ptr, node_tmp->prev);
-		node_tmp = node_tmp->prev;
-	}
-	//printk("Current merge pointer is %p\n", node_tmp);
-	while (node_tmp->next) {
-		//printk("(Bloc merge) Going on linked list : Actually on %p, going on %p\n", node_ptr, node_tmp->next);
-		node_tmp = node_tmp->next;
-	}
-}
-
 int		get_block_count(t_bloc *block) {
 	t_bloc *tmp_block;
 	int i = 1;
@@ -44,7 +27,6 @@ int		get_block_count(t_bloc *block) {
 	tmp_block = block;
 	if (block->prev) {
 		while (tmp_block->prev) {
-			//printk("Actually on %p, going on %p\n", tmp_block, tmp_block->prev);
 			i++;
 			tmp_block = tmp_block->prev;
 		}
@@ -70,21 +52,20 @@ void reorganize_pointer(t_bloc *node) {
 	cur_block = node;
 	//printk("Curr_block is %p, next is %p, prev is %p\n", cur_block, cur_block->next, cur_block->prev);
 	//printk("Block is supposed to start on %p -> %p\n", cur_block, ((char *)cur_block + cur_block->total_size));
-	first_alloc_of_bloc = (t_alloc *)((char *)cur_block + sizeof(t_bloc) + 1);
+	first_alloc_of_bloc = (t_alloc *)((char *)cur_block + STRUCT_BLOCK_SIZE + 1);
 
 	printk("first_alloc_of_bloc is %p, next is %p, prev is %p\n", first_alloc_of_bloc, first_alloc_of_bloc->next, first_alloc_of_bloc->prev);
 
 	/*if (first_alloc_of_bloc->buffer_overflow == MAGIC_NUMBER)
-		////printk("Integrity of alloc confirmed\n");
+		printk("Integrity of alloc confirmed\n");
 	else
-		////printk("alloc probably corrupt :(");
+		printk("alloc probably corrupt :(");
 	*/
 
-	//////printk("%d / %d freed\n",cur_block->total_freed_node, cur_block->total_node);
+	//printk("%d / %d freed\n",cur_block->total_freed_node, cur_block->total_node);
 	if (node->next) {
-		last_alloc_of_bloc = ((t_alloc *)((char*)node->next + sizeof(t_alloc) + 1))->prev;
+		last_alloc_of_bloc = ((t_alloc *)((char*)node->next + STRUCT_BLOCK_SIZE + 1))->prev;
 		printk("last_alloc_of_bloc is %p, next is %p, prev is %p\n", last_alloc_of_bloc, last_alloc_of_bloc->next, last_alloc_of_bloc->prev);
-		printk("Is last alloc freed ? is_busy = %d\n", last_alloc_of_bloc->is_busy);
 	} else
 		last_alloc_of_bloc = 0;
 
@@ -107,20 +88,18 @@ void reorganize_pointer(t_bloc *node) {
 	}
 }
 
-#include <stdlib.h>
-
 int		check_real_freed_nodes(t_bloc *node) {
-	t_alloc *first_alloc = (t_alloc *)((char*)node + sizeof(t_bloc) + 1);
+	t_alloc *first_alloc = (t_alloc *)((char*)node + STRUCT_BLOCK_SIZE + 1);
 	t_alloc *last_alloc;
 	int total_freed_node = 0;
 	int total_node = 0;
 
 	if (node->next)
-		last_alloc = ((t_alloc *)((char*)node->next + sizeof(t_alloc) + 1))->prev;
+		last_alloc = ((t_alloc *)((char*)node->next + STRUCT_BLOCK_SIZE + 1))->prev;
 	else
 		last_alloc = 0;
 	//printk("check_real_freed_nodes, start of block is %p, end of block is %p, block size is %d\n", node, ((char*)node + node->total_size), node->total_size);
-	////printk("check_real_freed_nodes, first_bloc is %p, last_alloc is %p, because last_alloc->next is %p\n", first_alloc, last_alloc, (last_alloc) ? last_alloc->next : 0);
+	//printk("check_real_freed_nodes, first_bloc is %p, last_alloc is %p, because last_alloc->next is %p\n", first_alloc, last_alloc, (last_alloc) ? last_alloc->next : 0);
 
 	while (first_alloc->block == node) {
 		//printk("check_real_freed_nodes first_alloc is %p, is_busy == %d, next is %p\n", first_alloc, first_alloc->is_busy, first_alloc->next);
@@ -129,7 +108,6 @@ int		check_real_freed_nodes(t_bloc *node) {
 			//printk("Infos about current block : start at %p, end at %p, size of %lu\n", node, ((char *)node + node->total_size), node->total_size);
 			last_alloc = first_alloc->prev;
 			break;
-			//exit(127);
 		}
 		if (first_alloc->is_busy == ALLOC_FREE)
 			total_freed_node++;
@@ -169,7 +147,7 @@ void	check_block_to_free(t_alloc *alloc) {
 		} //else
 			//printk("check_block_to_free node %p : %d/%d freed\n", block_tmp, block_tmp->total_freed_node, block_tmp->total_node);
 		//if (block_tmp && block_tmp->next == NULL)
-			////printk("last curr_block is %p, next is %p, prev is %p\n", block_tmp, block_tmp->next, block_tmp->prev);
+			//printk("last curr_block is %p, next is %p, prev is %p\n", block_tmp, block_tmp->next, block_tmp->prev);
 		block_tmp = block_tmp->next;
 	}
 }
@@ -188,9 +166,6 @@ void	real_free(void *ptr) {
 		if (node_ptr->block->total_freed_node < node_ptr->block->total_node)
 			node_ptr->block->total_freed_node++;
 		//printk("Total_freed_node of block %p, is %lu/%lu\n",node_ptr->block ,node_ptr->block->total_freed_node, node_ptr->block->total_node);
-		/*if ((node_ptr->prev && node_ptr->prev->is_busy == ALLOC_FREE) ||
-			(node_ptr->next && node_ptr->next->is_busy == ALLOC_FREE))
-			merge_blocks(node_ptr);*/
 		if (node_ptr->block->total_node == 0)
 			node_ptr->block->total_node = 1;
 		//printk("get_block_count return %d\n", get_block_count(node_ptr->block));

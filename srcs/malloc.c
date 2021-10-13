@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/12 03:23:45 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 11:31:43 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,14 +42,14 @@ t_alloc *init_node(size_t size_requested) {
 	t_alloc *node;
 
 	////printk("Creating NEW node: %lu bytes long (%lu + %lu) <- STRUCT_SIZE\n", size_requested + STRUCT_SIZE, size_requested, STRUCT_SIZE);
-	size_requested += STRUCT_SIZE + sizeof(t_bloc) + 1;
+	size_requested += TOTAL_STRUCT_SIZE + 1;
 	size_requested = (size_requested / PAGESIZE + 1) * PAGESIZE;
 	////printk("Creating NEW node: %lu bytes long\n", size_requested);
 	bloc = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
-	node = (t_alloc *)((char *)bloc + sizeof(t_bloc) + 1);
-	////printk("Bloc is stored at %p, and node at %p (+%lu + 1)\n", bloc, node, sizeof(t_bloc));
+	node = (t_alloc *)((char *)bloc + STRUCT_BLOCK_SIZE + 1);
+	////printk("Bloc is stored at %p, and node at %p (+%lu + 1)\n", bloc, node, STRUCT_BLOCK_SIZE);
 	if (!bloc || bloc == MAP_FAILED) {
-		//////printk("/!\\mmap failed\n");
+		//printk("/!\\mmap failed\n");
 		return 0;
 	}
 
@@ -60,25 +60,25 @@ t_alloc *init_node(size_t size_requested) {
 	//printk("Create new bloc start at %p, and end at %p (size %lu)\n", bloc, ((char *)bloc + bloc->total_size), bloc->total_size + 1);
 	curr_block_start = bloc;
 	curr_block_end = (t_bloc *)((char *)bloc + bloc->total_size);
-	//////printk("Node pointer is %p (size - STRUCT_SIZE)\n", node);
-	node->size = bloc->total_size - sizeof(t_alloc) - 1;
-	//////printk("Node->size is %lu\n", node->size);
+	//printk("Node pointer is %p (size - STRUCT_SIZE)\n", node);
+	node->size = bloc->total_size - STRUCT_SIZE - 1;
+	//printk("Node->size is %lu\n", node->size);
 	node->buffer_overflow = MAGIC_NUMBER;
 	// Available: 1, Not Available: 2
 	node->is_busy = ALLOC_FREE;
 	node->next = NULL;
-	//////printk("node->block point on %p\n", bloc);
+	//printk("node->block point on %p\n", bloc);
 	node->block = bloc;
 	node->prev = NULL;
 
 	bloc->next = NULL;
 	bloc->prev = (g_curr_node) ? g_curr_node->block : NULL;
 	if (g_curr_node) {
-		printk("g_curr_node is %p, prev is %p, next is %p\n", g_curr_node, g_curr_node->prev, g_curr_node->next);
+		//printk("g_curr_node is %p, prev is %p, next is %p\n", g_curr_node, g_curr_node->prev, g_curr_node->next);
 		g_curr_node->block->next = bloc;
-		////printk("Bloc->prev = %p, because g_curr_node = %p and g_curr_node->block = %p\n", bloc->prev, g_curr_node, g_curr_node->block);
+		//printk("Bloc->prev = %p, because g_curr_node = %p and g_curr_node->block = %p\n", bloc->prev, g_curr_node, g_curr_node->block);
 	}
-	printk("bloc->next = %p, bloc->prev = %p\n", bloc->next, bloc->prev);
+	//printk("bloc->next = %p, bloc->prev = %p\n", bloc->next, bloc->prev);
 	return node;
 }
 
@@ -123,8 +123,8 @@ t_alloc *split_node(t_alloc *node, size_t size_of_block) {
 	////printk("Incrementing total node for pointer %p, bringing it to %d\n", node->block, node->block->total_node);
 	node->is_busy = ALLOC_USED;
 
-	////printk("Test compute new_alloc_size = %lu\n", ((char *)node->block + node->block->total_size) - ((char *)new_node));
-	//////printk("Test compute2 new_alloc_size = %lu\n", old_size_block - node->size - (15 - roundUpDiff(((char *)node + STRUCT_SIZE + size_of_block+ 1), 16)) - 1);
+	//printk("Original size was = new_node->size = %lu\n", old_size_block - node->size);
+	//printk("Test compute2 new_alloc_size = %lu\n", old_size_block - node->size - (15 - roundUpDiff(((char *)node + STRUCT_SIZE + size_of_block+ 1), 16)) - 1);
 
 	new_node->buffer_overflow = MAGIC_NUMBER;
 	new_node->is_busy = ALLOC_FREE;
@@ -210,10 +210,7 @@ void	*real_malloc(size_t size) {
 	t_alloc *tmp_g_curr_node = 0;
 	t_alloc *tmp2_g_curr_node = 0;
 
-	//////printk("int %d, short %d, long %d, size_t %d\n", sizeof(int), sizeof(short), sizeof(long), sizeof(size_t));
-
-	(void)tmp_g_curr_node;
-	printk("-------REQUESTING NEW MALLOC OF SIZE %lu---------\n", size);
+	//printk("-------REQUESTING NEW MALLOC OF SIZE %lu---------\n", size);
 	if (size == 0)
 		return NULL;
 	if (!g_curr_node) {
@@ -221,7 +218,7 @@ void	*real_malloc(size_t size) {
 			return NULL;
 		////printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
-	printk("Start of alloc -> g_curr_node = %p next-> %p, prev %p with size %lu\n", g_curr_node, g_curr_node->next, g_curr_node->prev,  g_curr_node->size);
+	//printk("Start of alloc -> g_curr_node = %p next-> %p, prev %p with size %lu\n", g_curr_node, g_curr_node->next, g_curr_node->prev,  g_curr_node->size);
 	int tmp_value = STRUCT_SIZE + size;
 	if (g_curr_node->is_busy == ALLOC_USED || tmp_value > g_curr_node->size) {
 
@@ -251,18 +248,18 @@ void	*real_malloc(size_t size) {
 		g_curr_node = tmp2_g_curr_node;
 		tmp2_g_curr_node = 0;
 	}
-	////printk("before return, g_curr_node is %p\n", g_curr_node);
+	//printk("before return, g_curr_node is %p\n", g_curr_node);
 
 	printk("g_curr_node = %p and g_curr_node->next %p before return\n", g_curr_node, g_curr_node->next);
-	////printk("Incrementing total node for pointer %p, bringing it to %d\n", return_node_ptr->block, return_node_ptr->block->total_node);
-	////printk("Total node for pointer %p is %d\n", return_node_ptr->block, return_node_ptr->block->total_node);
-	//////printk("Size of t_alloc is %lu and size of t_bloc is %lu\n", sizeof(t_alloc), sizeof(t_bloc));
-	//////printk("Final check before launching, is pointer aligned ? %s\n",
+	//printk("Incrementing total node for pointer %p, bringing it to %d\n", return_node_ptr->block, return_node_ptr->block->total_node);
+	//printk("Total node for pointer %p is %d\n", return_node_ptr->block, return_node_ptr->block->total_node);
+	//printk("Size of t_alloc is %lu and size of t_bloc is %lu\n", sizeof(t_alloc), STRUCT_BLOCK_SIZE);
+	//printk("Final check before launching, is pointer aligned ? %s\n",
 	//		(((uintptr_t)((char *)return_node_ptr + STRUCT_SIZE + 1) % 16) == 0) ? "YES" : "NO");
-	////printk("Block begin at %p and end at %p size of %lu\n", return_node_ptr->block, ((char*)return_node_ptr->block + return_node_ptr->block->total_size), return_node_ptr->block->total_size);
-	////printk("Node check before return : prev -> %p and next -> %p\n", return_node_ptr->prev, return_node_ptr->next);
-	////printk("Alloc metadata at %p, datas at %p and end at %p.\n", return_node_ptr, ((char *)return_node_ptr + STRUCT_SIZE + 1), ((char *)return_node_ptr + return_node_ptr->size));
-	////printk("Returning %p with size %lu (real size %lu) from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + STRUCT_SIZE + 1), return_node_ptr->size - STRUCT_SIZE, return_node_ptr->size, return_node_ptr);
+	//printk("Block begin at %p and end at %p size of %lu\n", return_node_ptr->block, ((char*)return_node_ptr->block + return_node_ptr->block->total_size), return_node_ptr->block->total_size);
+	//printk("Node check before return : prev -> %p and next -> %p\n", return_node_ptr->prev, return_node_ptr->next);
+	//printk("Alloc metadata at %p, datas at %p and end at %p.\n", return_node_ptr, ((char *)return_node_ptr + STRUCT_SIZE + 1), ((char *)return_node_ptr + return_node_ptr->size));
+	//printk("Returning %p with size %lu (real size %lu) from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + STRUCT_SIZE + 1), return_node_ptr->size - STRUCT_SIZE, return_node_ptr->size, return_node_ptr);
 	printk("~~~~~~~END MALLOC~~~~~~~~~\n");
 	return ((char *)return_node_ptr + STRUCT_SIZE + 1);
 }
