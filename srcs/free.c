@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/13 14:22:31 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 14:51:00 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,28 +19,6 @@ extern t_alloc *g_curr_node;
 
 // Debug
 #include "../debug_lib/srcs/iolib.h"
-
-int		get_block_count(t_block *block) {
-	t_block *tmp_block;
-	int i = 1;
-
-	tmp_block = block;
-	if (block->prev) {
-		while (tmp_block->prev) {
-			i++;
-			tmp_block = tmp_block->prev;
-		}
-	}
-
-	if (block->next) {
-		tmp_block = block;
-		while (tmp_block->next) {
-			i++;
-			tmp_block = tmp_block->next;
-		}
-	}
-	return i;
-}
 
 void reorganize_pointer(t_block *node) {
 	t_block  *cur_block;
@@ -90,23 +68,12 @@ void reorganize_pointer(t_block *node) {
 
 int		check_real_freed_nodes(t_block *node) {
 	t_alloc *first_alloc = (t_alloc *)((char*)node + STRUCT_BLOCK_SIZE + 1);
-	t_alloc *last_alloc;
 	int total_freed_node = 0;
 	int total_node = 0;
 
-	if (node->next)
-		last_alloc = ((t_alloc *)((char*)node->next + STRUCT_BLOCK_SIZE + 1))->prev;
-	else
-		last_alloc = 0;
-	//printk("check_real_freed_nodes, start of block is %p, end of block is %p, block size is %d\n", node, ((char*)node + node->total_size), node->total_size);
-	//printk("check_real_freed_nodes, first_block is %p, last_alloc is %p, because last_alloc->next is %p\n", first_alloc, last_alloc, (last_alloc) ? last_alloc->next : 0);
-
 	while (first_alloc->block == node) {
-		//printk("check_real_freed_nodes first_alloc is %p, is_busy == %d, next is %p\n", first_alloc, first_alloc->is_busy, first_alloc->next);
 		if (first_alloc->block != node) {
 			//printk("/!\\ Bad redirection detected !!!!! first_alloc = %p, first_alloc->prev = %p\n", first_alloc, first_alloc->prev);
-			//printk("Infos about current block : start at %p, end at %p, size of %lu\n", node, ((char *)node + node->total_size), node->total_size);
-			last_alloc = first_alloc->prev;
 			break;
 		}
 		if (first_alloc->is_busy == ALLOC_FREE)
@@ -119,6 +86,7 @@ int		check_real_freed_nodes(t_block *node) {
 	if (total_node == 0)
 		total_node = 1;
 	node->total_node = total_node;
+	node->total_freed_node = total_freed_node;
 	return total_freed_node;
 }
 
@@ -134,11 +102,11 @@ void	check_block_to_free(t_alloc *alloc) {
 	//printk("Curr_block is %p, next is %p, prev is %p\n", block_tmp, block_tmp->next, block_tmp->prev);
 	while (block_tmp) {
 		if (g_curr_node->block == block_tmp) {
-			//printk("Move on, loopy condition\n");
+			//printk("Move on, crashy condition\n");
 			block_tmp = block_tmp->next;
 			continue;
 		}
-		if (/*block_tmp->total_freed_node*/ check_real_freed_nodes(block_tmp) == block_tmp->total_node) {
+		if (check_real_freed_nodes(block_tmp) == block_tmp->total_node) {
 			check_real_freed_nodes(block_tmp);
 			printk("Should launch munmap for block %p, size %lu\n", block_tmp, block_tmp->total_size);
 			reorganize_pointer(block_tmp);
@@ -146,8 +114,6 @@ void	check_block_to_free(t_alloc *alloc) {
 			return;
 		} //else
 			//printk("check_block_to_free node %p : %d/%d freed\n", block_tmp, block_tmp->total_freed_node, block_tmp->total_node);
-		//if (block_tmp && block_tmp->next == NULL)
-			//printk("last curr_block is %p, next is %p, prev is %p\n", block_tmp, block_tmp->next, block_tmp->prev);
 		block_tmp = block_tmp->next;
 	}
 }
@@ -163,12 +129,8 @@ void	real_free(void *ptr) {
 	if (node_ptr->buffer_overflow == MAGIC_NUMBER && node_ptr->is_busy != ALLOC_FREE) {
 		printk("Freeing from address %p\n", node_ptr);
 		node_ptr->is_busy = ALLOC_FREE;
-		if (node_ptr->block->total_freed_node < node_ptr->block->total_node)
-			node_ptr->block->total_freed_node++;
-		//printk("Total_freed_node of block %p, is %lu/%lu\n",node_ptr->block ,node_ptr->block->total_freed_node, node_ptr->block->total_node);
 		if (node_ptr->block->total_node == 0)
 			node_ptr->block->total_node = 1;
-		//printk("get_blockk_count return %d\n", get_blockk_count(node_ptr->block));
 		if (node_ptr->block->next || node_ptr->block->prev) {
 			check_block_to_free(node_ptr);
 		}

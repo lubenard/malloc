@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/13 14:25:35 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 14:46:21 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -222,16 +222,16 @@ void	*real_malloc(size_t size) {
 	if (!g_curr_node) {
 		if (!create_link_new_node(size))
 			return NULL;
-		////printk("Head of linked list is now init @ %p\n", g_curr_node);
+		//printk("Head of linked list is now init @ %p\n", g_curr_node);
 	}
 	//printk("Start of alloc -> g_curr_node = %p next-> %p, prev %p with size %lu\n", g_curr_node, g_curr_node->next, g_curr_node->prev,  g_curr_node->size);
 	int tmp_value = STRUCT_SIZE + size;
 	if (g_curr_node->is_busy == ALLOC_USED || tmp_value > g_curr_node->size) {
 
 		//if (g_curr_node->is_busy == ALLOC_USED)
-			////printk("Creating new node cause g_curr_node is set as locked\n");
+			//printk("Creating new node cause g_curr_node is set as locked\n");
 		//else
-			////printk("Creating new node cause size (%lu) > g_curr_node->size (%lu)\n", tmp_value, g_curr_node->size);
+			//printk("Creating new node cause size (%lu) > g_curr_node->size (%lu)\n", tmp_value, g_curr_node->size);
 
 		if (!(tmp_g_curr_node = find_place_at_beginning(tmp_value))) {
 			if (!create_link_new_node(size))
@@ -242,11 +242,11 @@ void	*real_malloc(size_t size) {
 		}
 		return_node_ptr = should_split(tmp_value, size);
 	} else if (g_curr_node->buffer_overflow == MAGIC_NUMBER) {
-		////printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", tmp_value, STRUCT_SIZE, size, g_curr_node, g_curr_node->size);
+		//printk("Found space for %lu (%lu + %lu) bytes in block located at %p (%lu bytes available)\n", tmp_value, STRUCT_SIZE, size, g_curr_node, g_curr_node->size);
 		return_node_ptr = should_split(tmp_value, size);
 	} else {
-		////printk("tmp_value = %d, g_curr_node->Size = %d\n", tmp_value, g_curr_node->size);
-		////printk("Possibly corrupted node on %p, magic number is %d, should be %d\n", g_curr_node, g_curr_node->buffer_overflow, MAGIC_NUMBER);
+		//printk("tmp_value = %d, g_curr_node->Size = %d\n", tmp_value, g_curr_node->size);
+		//printk("Possibly corrupted node on %p, magic number is %d, should be %d\n", g_curr_node, g_curr_node->buffer_overflow, MAGIC_NUMBER);
 		return NULL;
 	}
 
@@ -254,15 +254,11 @@ void	*real_malloc(size_t size) {
 		g_curr_node = tmp2_g_curr_node;
 		tmp2_g_curr_node = 0;
 	}
+	
 	//printk("before return, g_curr_node is %p\n", g_curr_node);
-
-	printk("g_curr_node = %p and g_curr_node->next %p before return\n", g_curr_node, g_curr_node->next);
-	//printk("Incrementing total node for pointer %p, bringing it to %d\n", return_node_ptr->block, return_node_ptr->block->total_node);
-	//printk("Total node for pointer %p is %d\n", return_node_ptr->block, return_node_ptr->block->total_node);
-	//printk("Size of t_alloc is %lu and size of t_block is %lu\n", sizeof(t_alloc), STRUCT_BLOCK_SIZE);
+	//printk("g_curr_node = %p and g_curr_node->next %p before return\n", g_curr_node, g_curr_node->next);
 	//printk("Final check before launching, is pointer aligned ? %s\n",
 	//		(((uintptr_t)((char *)return_node_ptr + STRUCT_SIZE + 1) % 16) == 0) ? "YES" : "NO");
-	//printk("Block begin at %p and end at %p size of %lu\n", return_node_ptr->block, ((char*)return_node_ptr->block + return_node_ptr->block->total_size), return_node_ptr->block->total_size);
 	//printk("Node check before return : prev -> %p and next -> %p\n", return_node_ptr->prev, return_node_ptr->next);
 	//printk("Alloc metadata at %p, datas at %p and end at %p.\n", return_node_ptr, ((char *)return_node_ptr + STRUCT_SIZE + 1), ((char *)return_node_ptr + return_node_ptr->size));
 	//printk("Returning %p with size %lu (real size %lu) from malloc call. Original ptr is %p\n", ((char *)return_node_ptr + STRUCT_SIZE + 1), return_node_ptr->size - STRUCT_SIZE, return_node_ptr->size, return_node_ptr);
