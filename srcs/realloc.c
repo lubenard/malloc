@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:22:31 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/12 01:40:46 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 11:00:50 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../includes/malloc.h"
@@ -52,7 +52,7 @@ void	*realloc(void *ptr, size_t size) {
 		return (real_malloc(size));
 	}
 	node_ptr = (t_alloc *)((char *) ptr - STRUCT_SIZE - 1);
-	if (node_ptr->buffer_overflow == MAGIC_NUMBER
+	/*if (node_ptr->buffer_overflow == MAGIC_NUMBER
 		&& node_ptr->next && node_ptr->next->is_busy == 1
 		&& (size_t)(node_ptr->size - STRUCT_SIZE) + (size_t)(node_ptr->next->size - STRUCT_SIZE) > size) {
 		//printk("Compute is %lu + (next) %lu > %lu\n", (size_t)(node_ptr->size - STRUCT_SIZE), (size_t)(node_ptr->next->size - STRUCT_SIZE), size);
@@ -69,7 +69,7 @@ void	*realloc(void *ptr, size_t size) {
 			printk("g_curr_node should be %p ->next is %p\n", g_curr_node, g_curr_node->next);
 		ptr_realloc = ptr;
 		printk("Restoring g_curr_node (%p), next is %p\n", g_curr_node, g_curr_node->next);
-	} /*else if (node_ptr->prev && node_ptr->prev->is_busy == 1
+	}*/ /*else if (node_ptr->prev && node_ptr->prev->is_busy == 1
 		&& (size_t)(node_ptr->size - STRUCT_SIZE) + (size_t)(node_ptr->prev->size - STRUCT_SIZE) > size) {
 		//printk("Compute is %lu + (prev) %lu > %lu\n", (size_t)(node_ptr->size - STRUCT_SIZE), (size_t)(node_ptr->prev->size - STRUCT_SIZE), size);
 		//printk("Block at %p has %lu bytes availables and is_busy is 1\n", node_ptr->prev, node_ptr->prev->size - STRUCT_SIZE);
@@ -78,12 +78,12 @@ void	*realloc(void *ptr, size_t size) {
 		resplit_node(node_ptr->prev, node_ptr);
 		split_node(node_ptr->prev, size);
 		ptr_realloc = ((char*) node_ptr->prev + STRUCT_SIZE + 1);
-	}*/ else {
+	}*/// else {
 		size_to_copy = ((int)size < node_ptr->size) ? size : node_ptr->size - STRUCT_SIZE;
 		ptr_realloc = real_malloc(size);
 		ft_memcpy(ptr_realloc, ptr, size_to_copy);
 		real_free(ptr);
-	}
+	//}
 	printk("----END REALLOC, return %p----\n", ptr_realloc);
 	pthread_mutex_unlock(&g_mutex);
 	return ptr_realloc;
