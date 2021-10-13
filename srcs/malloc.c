@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/13 16:36:48 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 23:28:12 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,23 +110,23 @@ t_alloc *split_node(t_alloc *node, size_t size_of_block) {
 
 	new_node = (t_alloc *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16);
 
-	////printk("roundUpDiff return %lu from address %p\n", roundUpDiff(((char *)node + STRUCT_SIZE + size_of_block + 1), 16), ((char *)node + STRUCT_SIZE + size_of_block + 1));
+	//printk("roundUpDiff return %lu from address %p\n", roundUpDiff(((char *)node + STRUCT_SIZE + size_of_block + 1), 16), ((char *)node + STRUCT_SIZE + size_of_block + 1));
 
-	////printk("Could we place struct @ %p, cause %p (+32) is aligned\n", roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16), ((char *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16) + STRUCT_SIZE + 1));
+	//printk("Could we place struct @ %p, cause %p (+32) is aligned\n", roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16), ((char *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16) + STRUCT_SIZE + 1));
 
 	//if ((uintptr_t)((char *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16) + STRUCT_SIZE + 1) % 16 == 0)
-		//////printk("Check, pointer %p is aligned\n", ((char *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16) + STRUCT_SIZE + 1));
+		//printk("Check, pointer %p is aligned\n", ((char *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16) + STRUCT_SIZE + 1));
 	//else
-		//////printk("check, pointer %p not aligned\n", ((char *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16) + STRUCT_SIZE));
+		//printk("check, pointer %p not aligned\n", ((char *)roundUp(((char *)node + STRUCT_SIZE + size_of_block + 1), 16) + STRUCT_SIZE));
 
 	node->size = (size_t)new_node - (size_t)node - 1;
-	////printk("Size of block is %lu, node begin at %p, datas start at %p, datas should end at %p, node end at %p\n", size_of_block, node, ((char *)node + STRUCT_SIZE + 1), ((char *)node + STRUCT_SIZE + size_of_block), ((char*) node + node->size));
+	//printk("Size of block is %lu, node begin at %p, datas start at %p, datas should end at %p, node end at %p\n", size_of_block, node, ((char *)node + STRUCT_SIZE + 1), ((char *)node + STRUCT_SIZE + size_of_block), ((char*) node + node->size));
 	//node->size = STRUCT_SIZE + size_of_block + roundUpDiff(((char *)node + STRUCT_SIZE + size_of_block + 1), 16);
-	//////printk("Node %p is marqued as not available\n", node);
-	//////printk("node->size %lu - %lu = %lu\n", (size_t)new_node, (size_t)node, (size_t)new_node - (size_t)node - 1);
-	////printk("check node->size = %lu\n", node->size);
+	//printk("Node %p is marqued as not available\n", node);
+	//printk("node->size %lu - %lu = %lu\n", (size_t)new_node, (size_t)node, (size_t)new_node - (size_t)node - 1);
+	//printk("check node->size = %lu\n", node->size);
 	node->block->total_node++;
-	////printk("Incrementing total node for pointer %p, bringing it to %d\n", node->block, node->block->total_node);
+	//printk("Incrementing total node for pointer %p, bringing it to %d\n", node->block, node->block->total_node);
 	node->is_busy = ALLOC_USED;
 
 	//printk("Original size was = new_node->size = %lu\n", old_size_block - node->size);
@@ -141,23 +141,23 @@ t_alloc *split_node(t_alloc *node, size_t size_of_block) {
 	new_node->block = node->block;
 
 	/*if (((char *)new_node + new_node->size) > ((char *)new_node->block + new_node->block->total_size)) {
-		////printk("Split : Pointer way to big !\n");
+		//printk("Split : Pointer way to big !\n");
 		new_node->size = ((char *)new_node->block + new_node->block->total_size) - ((char*)new_node) - 1;
-		////printk("Split : resized pointer to %lu !\n", ((char *)new_node->block + new_node->block->total_size) - ((char*)new_node) - 1);
+		//printk("Split : resized pointer to %lu !\n", ((char *)new_node->block + new_node->block->total_size) - ((char*)new_node) - 1);
 	}*/
 
-	////printk("New_node->size %lu - %lu = %lu\n", old_size_block, node->size, old_size_block - node->size);
-	////printk("Node->size (%p) is %lu, and new_node->size (%p) = %lu\n", node, node->size, new_node, new_node->size);
+	//printk("New_node->size %lu - %lu = %lu\n", old_size_block, node->size, old_size_block - node->size);
+	//printk("Node->size (%p) is %lu, and new_node->size (%p) = %lu\n", node, node->size, new_node, new_node->size);
 
 	if (node->next)
 		node->next->prev = new_node;
 	node->next = new_node;
-	//////printk("new_node->block = %p\n", new_node->block);
-	//////printk("Node->next = %p\n", node->next);
-	//////printk("node->buffer_overflow = %d\n", node->buffer_overflow);
-	//////printk("New_node->buffer_overflow = %d\n", new_node->buffer_overflow);
-	//////printk("Placed g_curr_node @ %p\n", g_curr_node);
-	////printk("Node %p -> %p, new_node %p -> %p\n", node, ((char *)node + node->size), new_node, ((char *) new_node + new_node->size));
+	//printk("new_node->block = %p\n", new_node->block);
+	//printk("Node->next = %p\n", node->next);
+	//printk("node->buffer_overflow = %d\n", node->buffer_overflow);
+	//printk("New_node->buffer_overflow = %d\n", new_node->buffer_overflow);
+	//printk("Placed g_curr_node @ %p\n", g_curr_node);
+	//printk("Node %p -> %p, new_node %p -> %p\n", node, ((char *)node + node->size), new_node, ((char *) new_node + new_node->size));
 	return new_node;
 }
 
@@ -167,20 +167,18 @@ t_alloc		*find_place_at_beginning(size_t size_looked) {
 	node_tmp = g_curr_node;
 	////printk("find_place_at_beginning block, actually on %p\n", node_tmp);
 	while (node_tmp->prev) {
-		//////printk("Reversing linked list : Actually on %p, going on %p\n", node_tmp, node_tmp->prev);
+		//printk("Reversing linked list : Actually on %p with size %lu, going on %p\n", node_tmp, node_tmp->size, node_tmp->prev);
 		if (node_tmp->prev->buffer_overflow != MAGIC_NUMBER) {
 			//////printk("Probably node corruption on %p\n", node_tmp->prev);
 			//return 0;
 		}
-		if (node_tmp->is_busy == ALLOC_FREE && node_tmp->size > (int)size_looked) {
+		if (node_tmp->is_busy == ALLOC_FREE && node_tmp->size >= (int)size_looked) {
 			//printk("(find_place_at_beginning) Found space for %lu at %p (%lu bytes available in the node)\n", size_looked, node_tmp, node_tmp->size);
-			//if (node_tmp->block->total_freed_node == node_tmp->block->total_node)
-			//	node_tmp->block->total_freed_node--;
 			return node_tmp;
 		}
 		node_tmp = node_tmp->prev;
 	}
-	////printk("find_place_at_beginning No node able to contain it found\n");
+	//printk("find_place_at_beginning No node able to contain it found\n");
 	return 0;
 }
 
@@ -188,7 +186,7 @@ t_alloc *should_split(size_t tmp_value, size_t size) {
 	t_alloc *return_node_ptr;
 
 	////printk("roundUpDiff return %lu for pointer %p\n", (int)roundUpDiff(((char *)g_curr_node + tmp_value + 1), 16), ((char *)g_curr_node + tmp_value + 1));
-	////printk("Split ? g_curr_node at addr (%p) size %lu - %lu - %lu - %lu - 1 = %d > 0 = %s\n",
+	//printk("Split ? g_curr_node at addr (%p) size %lu - %lu - %lu - %lu - 1 = %d > 0 = %s\n",
 	/*g_curr_node,
 	g_curr_node->size,
 	tmp_value,
@@ -228,10 +226,10 @@ void	*real_malloc(size_t size) {
 	int tmp_value = STRUCT_SIZE + size;
 	if (g_curr_node->is_busy == ALLOC_USED || tmp_value > g_curr_node->size) {
 
-		//if (g_curr_node->is_busy == ALLOC_USED)
-			//printk("Creating new node cause g_curr_node is set as locked\n");
-		//else
-			//printk("Creating new node cause size (%lu) > g_curr_node->size (%lu)\n", tmp_value, g_curr_node->size);
+		/*if (g_curr_node->is_busy == ALLOC_USED)
+			printk("Creating new node cause g_curr_node is set as locked\n");
+		else
+			printk("Creating new node cause size (%lu) > g_curr_node->size (%lu)\n", tmp_value, g_curr_node->size);*/
 
 		if (!(tmp_g_curr_node = find_place_at_beginning(tmp_value))) {
 			if (!create_link_new_node(size))

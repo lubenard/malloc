@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/13 16:35:07 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 23:20:08 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ void reorganize_pointer(t_block *node) {
 	//printk("Block is supposed to start on %p -> %p\n", cur_block, ((char *)cur_block + cur_block->total_size));
 	first_alloc_of_bloc = (t_alloc *)((char *)cur_block + STRUCT_BLOCK_SIZE + 1);
 
-	printk("first_alloc_of_bloc is %p, next is %p, prev is %p\n", first_alloc_of_bloc, first_alloc_of_bloc->next, first_alloc_of_bloc->prev);
+	//printk("first_alloc_of_bloc is %p, next is %p, prev is %p\n", first_alloc_of_bloc, first_alloc_of_bloc->next, first_alloc_of_bloc->prev);
 
 	/*if (first_alloc_of_bloc->buffer_overflow == MAGIC_NUMBER)
 		printk("Integrity of alloc confirmed\n");
@@ -43,7 +43,7 @@ void reorganize_pointer(t_block *node) {
 	//printk("%d / %d freed\n",cur_block->total_freed_node, cur_block->total_node);
 	if (node->next) {
 		last_alloc_of_bloc = ((t_alloc *)((char*)node->next + STRUCT_BLOCK_SIZE + 1))->prev;
-		printk("last_alloc_of_bloc is %p, next is %p, prev is %p\n", last_alloc_of_bloc, last_alloc_of_bloc->next, last_alloc_of_bloc->prev);
+		//printk("last_alloc_of_bloc is %p, next is %p, prev is %p\n", last_alloc_of_bloc, last_alloc_of_bloc->next, last_alloc_of_bloc->prev);
 	} else
 		last_alloc_of_bloc = 0;
 
@@ -121,13 +121,13 @@ void	check_block_to_free(t_alloc *alloc) {
 void	real_free(void *ptr) {
 	t_alloc *node_ptr;
 
-	printk("---------REQUESTING FREE------------\n");
+	//printk("---------REQUESTING FREE------------\n");
 	if (ptr == 0)
 		return;
-	printk("Getting %p from arg\n", ptr);
+	//printk("Getting %p from arg\n", ptr);
 	node_ptr = (t_alloc *)((char *) ptr - STRUCT_SIZE - 1);
 	if (node_ptr->buffer_overflow == MAGIC_NUMBER && node_ptr->is_busy != ALLOC_FREE) {
-		printk("Freeing from address %p\n", node_ptr);
+		//printk("Freeing from address %p\n", node_ptr);
 		node_ptr->is_busy = ALLOC_FREE;
 		if (node_ptr->block->total_node == 0)
 			node_ptr->block->total_node = 1;
@@ -136,7 +136,7 @@ void	real_free(void *ptr) {
 		}
 	} else
 		printk("Invalid free\n");
-	printk("----------END FREE---------------\n");
+	//printk("----------END FREE---------------\n");
 }
 
 void free(void *ptr) {
