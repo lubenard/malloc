@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/13 14:51:00 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 15:19:41 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,7 +110,7 @@ void	check_block_to_free(t_alloc *alloc) {
 			check_real_freed_nodes(block_tmp);
 			printk("Should launch munmap for block %p, size %lu\n", block_tmp, block_tmp->total_size);
 			reorganize_pointer(block_tmp);
-			munmap(block_tmp, block_tmp->total_size);
+			munmap(block_tmp, block_tmp->total_size + 1);
 			return;
 		} //else
 			//printk("check_block_to_free node %p : %d/%d freed\n", block_tmp, block_tmp->total_freed_node, block_tmp->total_node);
