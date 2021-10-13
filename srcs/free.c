@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/28 11:21:03 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/13 11:30:36 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 14:22:31 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,8 +20,8 @@ extern t_alloc *g_curr_node;
 // Debug
 #include "../debug_lib/srcs/iolib.h"
 
-int		get_block_count(t_bloc *block) {
-	t_bloc *tmp_block;
+int		get_block_count(t_block *block) {
+	t_block *tmp_block;
 	int i = 1;
 
 	tmp_block = block;
@@ -42,8 +42,8 @@ int		get_block_count(t_bloc *block) {
 	return i;
 }
 
-void reorganize_pointer(t_bloc *node) {
-	t_bloc  *cur_block;
+void reorganize_pointer(t_block *node) {
+	t_block  *cur_block;
 	t_alloc *first_alloc_of_bloc;
 	t_alloc *last_alloc_of_bloc;
 	int i;
@@ -88,7 +88,7 @@ void reorganize_pointer(t_bloc *node) {
 	}
 }
 
-int		check_real_freed_nodes(t_bloc *node) {
+int		check_real_freed_nodes(t_block *node) {
 	t_alloc *first_alloc = (t_alloc *)((char*)node + STRUCT_BLOCK_SIZE + 1);
 	t_alloc *last_alloc;
 	int total_freed_node = 0;
@@ -99,7 +99,7 @@ int		check_real_freed_nodes(t_bloc *node) {
 	else
 		last_alloc = 0;
 	//printk("check_real_freed_nodes, start of block is %p, end of block is %p, block size is %d\n", node, ((char*)node + node->total_size), node->total_size);
-	//printk("check_real_freed_nodes, first_bloc is %p, last_alloc is %p, because last_alloc->next is %p\n", first_alloc, last_alloc, (last_alloc) ? last_alloc->next : 0);
+	//printk("check_real_freed_nodes, first_block is %p, last_alloc is %p, because last_alloc->next is %p\n", first_alloc, last_alloc, (last_alloc) ? last_alloc->next : 0);
 
 	while (first_alloc->block == node) {
 		//printk("check_real_freed_nodes first_alloc is %p, is_busy == %d, next is %p\n", first_alloc, first_alloc->is_busy, first_alloc->next);
@@ -123,7 +123,7 @@ int		check_real_freed_nodes(t_bloc *node) {
 }
 
 void	check_block_to_free(t_alloc *alloc) {
-	t_bloc *block_tmp;
+	t_block *block_tmp;
 
 	block_tmp = alloc->block;
 
@@ -168,8 +168,8 @@ void	real_free(void *ptr) {
 		//printk("Total_freed_node of block %p, is %lu/%lu\n",node_ptr->block ,node_ptr->block->total_freed_node, node_ptr->block->total_node);
 		if (node_ptr->block->total_node == 0)
 			node_ptr->block->total_node = 1;
-		//printk("get_block_count return %d\n", get_block_count(node_ptr->block));
-		if (get_block_count(node_ptr->block) > 1) {
+		//printk("get_blockk_count return %d\n", get_blockk_count(node_ptr->block));
+		if (node_ptr->block->next || node_ptr->block->prev) {
 			check_block_to_free(node_ptr);
 		}
 	}

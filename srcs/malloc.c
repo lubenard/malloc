@@ -6,7 +6,7 @@
 /*   By: lubenard <lubenard@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/08/26 13:50:12 by lubenard          #+#    #+#             */
-/*   Updated: 2021/10/13 11:31:43 by lubenard         ###   ########.fr       */
+/*   Updated: 2021/10/13 14:25:35 by lubenard         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,8 +25,8 @@ pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 #include "../debug_lib/srcs/iolib.h"
 #include "../debug_lib/srcs/strlib.h"
 
-t_bloc *curr_block_start;
-t_bloc *curr_block_end;
+t_block *curr_block_start;
+t_block *curr_block_end;
 
 // END DEBUG ONLY
 size_t roundUp(void *a, size_t b) {
@@ -38,28 +38,34 @@ size_t roundUpDiff(void *a, size_t b) {
 }
 
 t_alloc *init_node(size_t size_requested) {
-	t_bloc *bloc;
+	t_block *bloc;
 	t_alloc *node;
 
-	////printk("Creating NEW node: %lu bytes long (%lu + %lu) <- STRUCT_SIZE\n", size_requested + STRUCT_SIZE, size_requested, STRUCT_SIZE);
+	//printk("Creating NEW node: %lu bytes long (%lu + %lu) <- STRUCT_SIZE\n", size_requested + STRUCT_SIZE, size_requested, STRUCT_SIZE);
 	size_requested += TOTAL_STRUCT_SIZE + 1;
 	size_requested = (size_requested / PAGESIZE + 1) * PAGESIZE;
-	////printk("Creating NEW node: %lu bytes long\n", size_requested);
+	printk("Creating NEW node: %lu bytes long\n", size_requested);
 	bloc = mmap(NULL, size_requested, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 	node = (t_alloc *)((char *)bloc + STRUCT_BLOCK_SIZE + 1);
-	////printk("Bloc is stored at %p, and node at %p (+%lu + 1)\n", bloc, node, STRUCT_BLOCK_SIZE);
+	printk("Bloc is stored at %p, and node at %p (+%lu + 1)\n", bloc, node, STRUCT_BLOCK_SIZE);
 	if (!bloc || bloc == MAP_FAILED) {
 		//printk("/!\\mmap failed\n");
 		return 0;
 	}
 
+	if (size_requested < TINY)
+		bloc->block_type = 1;
+	else if (size_requested < SMALL)
+		bloc->block_type = 2;
+	else
+		bloc->block_type = 3;
 
 	bloc->total_node = 0;
 	bloc->total_freed_node = 0;
 	bloc->total_size = size_requested - 1;
 	//printk("Create new bloc start at %p, and end at %p (size %lu)\n", bloc, ((char *)bloc + bloc->total_size), bloc->total_size + 1);
 	curr_block_start = bloc;
-	curr_block_end = (t_bloc *)((char *)bloc + bloc->total_size);
+	curr_block_end = (t_block *)((char *)bloc + bloc->total_size);
 	//printk("Node pointer is %p (size - STRUCT_SIZE)\n", node);
 	node->size = bloc->total_size - STRUCT_SIZE - 1;
 	//printk("Node->size is %lu\n", node->size);
@@ -253,7 +259,7 @@ void	*real_malloc(size_t size) {
 	printk("g_curr_node = %p and g_curr_node->next %p before return\n", g_curr_node, g_curr_node->next);
 	//printk("Incrementing total node for pointer %p, bringing it to %d\n", return_node_ptr->block, return_node_ptr->block->total_node);
 	//printk("Total node for pointer %p is %d\n", return_node_ptr->block, return_node_ptr->block->total_node);
-	//printk("Size of t_alloc is %lu and size of t_bloc is %lu\n", sizeof(t_alloc), STRUCT_BLOCK_SIZE);
+	//printk("Size of t_alloc is %lu and size of t_block is %lu\n", sizeof(t_alloc), STRUCT_BLOCK_SIZE);
 	//printk("Final check before launching, is pointer aligned ? %s\n",
 	//		(((uintptr_t)((char *)return_node_ptr + STRUCT_SIZE + 1) % 16) == 0) ? "YES" : "NO");
 	//printk("Block begin at %p and end at %p size of %lu\n", return_node_ptr->block, ((char*)return_node_ptr->block + return_node_ptr->block->total_size), return_node_ptr->block->total_size);
